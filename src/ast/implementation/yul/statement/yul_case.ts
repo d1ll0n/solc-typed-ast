@@ -5,6 +5,8 @@ import { YulBlock } from "./yul_block";
 import { YulStatement } from "./yul_statement";
 
 export class YulCase extends YulStatement {
+	readonly type = "YulCase";
+
     value: YulLiteral | "default";
 
     vBody: YulBlock;

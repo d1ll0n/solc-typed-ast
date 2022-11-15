@@ -6,6 +6,8 @@ import { YulStatement } from "./yul_statement";
  * An expression, that is specified on a statement level.
  */
 export class YulExpressionStatement extends YulStatement {
+	readonly type = "YulExpressionStatement";
+
     /**
      * A contained expression, e.g. `foo(1);` or `x = 1 + 1;`
      */

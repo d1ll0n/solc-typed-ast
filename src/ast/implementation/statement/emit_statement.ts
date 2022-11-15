@@ -4,6 +4,8 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class EmitStatement extends Statement {
+	readonly type = "EmitStatement";
+
     /**
      * A function call to the event definition
      */

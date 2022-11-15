@@ -1,6 +1,8 @@
 import { ASTNode } from "../../ast_node";
 
 export class PragmaDirective extends ASTNode {
+	readonly type = "PragmaDirective";
+
     /**
      * An array representing literals of the pragma identifier and value parts,
      * e.g. `[ "solidity", "^", "0.4", ".15" ]`.

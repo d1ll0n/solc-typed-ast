@@ -2,6 +2,8 @@ import { YulLiteralKind } from "../../../constants";
 import { YulExpression } from "./yul_expression";
 
 export class YulLiteral extends YulExpression {
+    readonly type = "YulLiteral";
+
     /**
      * The type of literal: `number`, `string` or `bool`
      */

@@ -4,6 +4,8 @@ import { ParameterList } from "../meta/parameter_list";
 import { TypeName } from "./type_name";
 
 export class FunctionTypeName extends TypeName {
+	readonly type = "FunctionTypeName";
+
     /**
      * Function visibility, for example: `public`, `internal`, `private` or `external`.
      */

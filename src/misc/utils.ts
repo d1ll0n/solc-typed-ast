@@ -90,3 +90,22 @@ export function deepFindIn(
     }
     return result;
 }
+
+type AmbiguousArray<T> = T[] | readonly T[];
+
+type KeysToValues<Obj, Keys extends AmbiguousArray<keyof Obj>> = Keys["length"] extends 0
+    ? []
+    : Keys extends
+          | readonly [infer T1 extends keyof Obj, ...infer Rest]
+          | [infer T1 extends keyof Obj, ...infer Rest]
+    ? Rest extends AmbiguousArray<keyof Obj>
+        ? [Obj[T1], ...KeysToValues<Obj, Rest>]
+        : [Obj[T1]]
+    : [];
+
+export function extractProperties<Obj, Keys extends AmbiguousArray<keyof Obj>>(
+    obj: Obj,
+    keys: Keys
+): KeysToValues<Obj, Keys> {
+    return keys.map((key) => obj[key]) as KeysToValues<Obj, Keys>;
+}

@@ -3,6 +3,8 @@ import { ExternalReferenceType } from "../../../constants";
 import { YulExpression } from "./yul_expression";
 
 export class YulIdentifier extends YulExpression {
+    readonly type = "YulIdentifier";
+
     /**
      * Name of the identifier
      */

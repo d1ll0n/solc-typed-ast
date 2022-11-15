@@ -42,8 +42,8 @@ describe("ASTNodeFactory.copy()", () => {
         const defCopy = factory.copy(definition);
         const valCopy = defCopy.vMembers[0];
 
-        expect(defCopy === value).toBeFalsy();
-        expect(valCopy === value).toBeFalsy();
+        expect((defCopy as any) !== value).toBeTruthy();
+        expect((valCopy as any) !== value).toBeTruthy();
 
         verify(defCopy, EnumDefinition, {
             id: 4,

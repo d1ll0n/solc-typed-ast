@@ -4,6 +4,8 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class IfStatement extends Statement {
+	readonly type = "IfStatement";
+
     /**
      * Condition expression of the statement
      */

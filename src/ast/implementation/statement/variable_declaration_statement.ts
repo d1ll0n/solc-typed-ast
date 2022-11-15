@@ -5,6 +5,8 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class VariableDeclarationStatement extends Statement {
+	readonly type = "VariableDeclarationStatement";
+
     /**
      * Ids of the variables that are assigned by the statement.
      */

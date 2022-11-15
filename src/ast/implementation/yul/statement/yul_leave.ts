@@ -1,3 +1,5 @@
 import { YulStatement } from "./yul_statement";
 
-export class YulLeave extends YulStatement {}
+export class YulLeave extends YulStatement {
+	readonly type = "YulLeave";
+}

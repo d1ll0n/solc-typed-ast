@@ -8,6 +8,8 @@ export type ASTNodeSelector = (node: ASTNode) => boolean;
 const formatter = new ASTNodeFormatter();
 
 export class ASTNode {
+    readonly type: string = "";
+
     /**
      * Current tree context of the node
      */
@@ -71,13 +73,6 @@ export class ASTNode {
         for (const node of this.children) {
             node.parent = this;
         }
-    }
-
-    /**
-     * Type of the AST node
-     */
-    get type(): string {
-        return this.constructor.name;
     }
 
     /**
@@ -346,7 +341,6 @@ export class ASTNode {
         return walker;
     }
 }
-
 export class ASTNodeWithChildren<T extends ASTNode> extends ASTNode {
     protected ownChildren: ASTNode[] = [];
 

@@ -1,6 +1,8 @@
 import { ASTNode } from "../../ast_node";
 
 export class IdentifierPath extends ASTNode {
+	readonly type = "IdentifierPath";
+
     /**
      * A type name
      */

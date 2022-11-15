@@ -6,6 +6,8 @@ import { StructuredDocumentation } from "../meta/structured_documentation";
 import { ContractDefinition } from "./contract_definition";
 
 export class EventDefinition extends ASTNode {
+	readonly type = "EventDefinition";
+
     /**
      * The hash of the signature of the event is one of the topics
      * except if you set `anonymous`.

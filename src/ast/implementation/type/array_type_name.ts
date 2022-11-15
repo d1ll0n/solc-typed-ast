@@ -3,6 +3,8 @@ import { Expression } from "../expression/expression";
 import { TypeName } from "./type_name";
 
 export class ArrayTypeName extends TypeName {
+	readonly type = "ArrayTypeName";
+
     /**
      * Type of array elements
      */

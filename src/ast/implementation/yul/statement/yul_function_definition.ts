@@ -5,6 +5,8 @@ import { YulTypedName } from "../expression";
 import { YulStatement } from "./yul_statement";
 
 export class YulFunctionDefinition extends YulStatement {
+	readonly type = "YulFunctionDefinition";
+
     /**
      * Node id of scoped block
      */

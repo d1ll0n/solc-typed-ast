@@ -7,6 +7,8 @@ import { Identifier } from "../expression/identifier";
 import { IdentifierPath } from "./identifier_path";
 
 export class ModifierInvocation extends ASTNode {
+	readonly type = "ModifierInvocation";
+
     /**
      * Kind of invoked target modifier:
      * - base contract constrcutor (when appled via modifier syntax);

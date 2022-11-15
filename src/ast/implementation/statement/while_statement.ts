@@ -4,6 +4,8 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class WhileStatement extends Statement {
+	readonly type = "WhileStatement";
+
     /**
      * Continuation condition, e.g. `x < 10` in `while (x < 10) { ... }`
      */

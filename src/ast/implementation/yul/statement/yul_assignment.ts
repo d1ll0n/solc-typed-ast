@@ -5,6 +5,8 @@ import { YulASTNode } from "../yul_ast_node";
 import { YulStatement } from "./yul_statement";
 
 export class YulAssignment extends YulStatement {
+	readonly type = "YulAssignment";
+
     variableNames: YulIdentifier[];
 
     value: YulExpression;

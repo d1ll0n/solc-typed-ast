@@ -5,6 +5,8 @@ import { YulBlock } from "./yul_block";
 import { YulStatement } from "./yul_statement";
 
 export class YulForLoop extends YulStatement {
+	readonly type = "YulForLoop";
+
     /**
      * Variable declaration and initialization `uint x = 1`.
      * Also accepts other expression statements.

@@ -5,6 +5,8 @@ import { Statement } from "./statement";
 import { TryCatchClause } from "./try_catch_clause";
 
 export class TryStatement extends Statement {
+	readonly type = "TryStatement";
+
     /**
      * Contract creation call expression or external function call expression
      */

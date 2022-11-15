@@ -1,6 +1,8 @@
 import { YulExpression } from "./yul_expression";
 
 export class YulTypedName extends YulExpression {
+	readonly type = "YulTypedName";
+
     /**
      * Name of the identifier
      */
