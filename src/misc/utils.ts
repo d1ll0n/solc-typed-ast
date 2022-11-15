@@ -109,3 +109,5 @@ export function extractProperties<Obj, Keys extends AmbiguousArray<keyof Obj>>(
 ): KeysToValues<Obj, Keys> {
     return keys.map((key) => obj[key]) as KeysToValues<Obj, Keys>;
 }
+
+export const coerceArray = <T>(doc: T | T[]): T[] => (Array.isArray(doc) ? doc : [doc]);
