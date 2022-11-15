@@ -22,7 +22,12 @@ import {
     SourceUnit,
     VariableDeclarationStatement,
     UserDefinedTypeName,
-    PrimaryExpression
+    PrimaryExpression,
+    YulIdentifier,
+    YulFunctionDefinition,
+    YulExpression,
+    YulVariableDeclaration,
+    YulFunctionCall
 } from "./implementation";
 import { FunctionStateMutability, FunctionVisibility } from "./constants";
 
@@ -79,21 +84,12 @@ export class ASTNodeFactory {
 
         this.lastId = context.lastId;
 
-        // const _make = this.make as InternalMake;
         for (const [key, ctor] of ASTNodeClassEntries) {
-            /*  Object.defineProperty(fn, `replace${name.toPascalCase()}`, {
-                configurable: true,
-                writable: false,
-                enumerable: false,
-                value: function (this: ASTNodeFactory, newNode: YulExpression) {
-                    return fn.replaceChild(fn.arguments[index], newNode);
-                }
-            }); */
             Object.defineProperty(this, `make${key}`, {
                 configurable: true,
                 writable: false,
                 enumerable: true,
-                value: getMakeFn(ctor) //getMakeFn(_make, ctor)
+                value: getMakeFn(ctor)
             });
         }
     }
@@ -169,6 +165,38 @@ export class ASTNodeFactory {
             target instanceof ImportDirective ? target.unitAlias : target.name,
             target.id
         );
+    }
+
+    makeYulIdentifierFor(
+        target:
+            | FunctionDefinition
+            | VariableDeclaration
+            | Identifier
+            | YulFunctionDefinition
+            | YulVariableDeclaration,
+        name?: string
+    ): YulIdentifier {
+        if (target instanceof YulVariableDeclaration) {
+            if (target.variables.length === 1) {
+                name = target.variables[0].name;
+            } else if (
+                name === undefined ||
+                target.variables.find((v) => v.name === name) === undefined
+            ) {
+                const declarationString = `${target.type} (${target.variables.map((v) => v.name)})`;
+                throw Error(`variable ${name} not found in ${declarationString}`);
+            }
+        } else {
+            name = target.name;
+        }
+        return this.makeYulIdentifier(name, target.id);
+    }
+
+    makeYulFunctionCallFor(
+        fn: YulFunctionDefinition,
+        parameters: YulExpression[]
+    ): YulFunctionCall {
+        return this.makeYulFunctionCall(this.makeYulIdentifierFor(fn), parameters);
     }
 
     makeUnfinalized<T extends ASTNode>(
