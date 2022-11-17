@@ -111,3 +111,9 @@ export function extractProperties<Obj, Keys extends AmbiguousArray<keyof Obj>>(
 }
 
 export const coerceArray = <T>(doc: T | T[]): T[] => (Array.isArray(doc) ? doc : [doc]);
+type Constructor<C> = new (...args: any[]) => C;
+
+export const isInstanceOf = <NodeTypes extends Array<Constructor<any>>>(
+    node: any,
+    ...nodeTypes: NodeTypes
+): node is InstanceType<NodeTypes[number]> => nodeTypes.some((type) => node instanceof type);
