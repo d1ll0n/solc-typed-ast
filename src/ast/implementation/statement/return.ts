@@ -5,7 +5,7 @@ import { ParameterList } from "../meta/parameter_list";
 import { Statement } from "./statement";
 
 export class Return extends Statement {
-	readonly type = "Return";
+    readonly type = "Return";
 
     /**
      * Id of the parameter list that specifies the return parameters

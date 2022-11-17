@@ -4,7 +4,7 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class RevertStatement extends Statement {
-	readonly type = "RevertStatement";
+    readonly type = "RevertStatement";
 
     /**
      * A function call to the error definition

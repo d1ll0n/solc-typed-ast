@@ -2,7 +2,7 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class MemberAccess extends Expression {
-	readonly type = "MemberAccess";
+    readonly type = "MemberAccess";
 
     /**
      * The name of the member, e.g. `push` in `someArray.push(1)`

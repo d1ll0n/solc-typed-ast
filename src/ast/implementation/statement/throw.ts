@@ -1,5 +1,5 @@
 import { Statement } from "./statement";
 
 export class Throw extends Statement {
-	readonly type = "Throw";
+    readonly type = "Throw";
 }

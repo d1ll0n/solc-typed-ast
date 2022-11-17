@@ -8,7 +8,7 @@ import { Statement, StatementWithChildren } from "./statement";
 export class Block extends StatementWithChildren<
     Statement | StatementWithChildren<ASTNode> | StructuredDocumentation
 > {
-	readonly type = "Block";
+    readonly type = "Block";
 
     constructor(
         id: number,

@@ -12,7 +12,7 @@ export type SymbolOrigin = ExportedSymbol;
 export type ResolvedSymbolAlias = [SymbolOrigin, string | undefined];
 
 export class ImportDirective extends ASTNode {
-	readonly type = "ImportDirective";
+    readonly type = "ImportDirective";
 
     /**
      * File path to the imported source file

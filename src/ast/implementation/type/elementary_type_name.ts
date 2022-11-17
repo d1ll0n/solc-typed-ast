@@ -1,7 +1,7 @@
 import { TypeName } from "./type_name";
 
 export class ElementaryTypeName extends TypeName {
-	readonly type = "ElementaryTypeName";
+    readonly type = "ElementaryTypeName";
 
     /**
      * Name of the type

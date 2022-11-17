@@ -21,7 +21,7 @@ export type ExportedSymbol =
     | ImportDirective;
 
 export class SourceUnit extends ASTNodeWithChildren<ASTNode> {
-	readonly type = "SourceUnit";
+    readonly type = "SourceUnit";
 
     /**
      * Original "sources" key, that corresponds to current AST entry.

@@ -2,7 +2,7 @@ import { ASTNode } from "../../ast_node";
 import { TypeName } from "./type_name";
 
 export class Mapping extends TypeName {
-	readonly type = "Mapping";
+    readonly type = "Mapping";
 
     /**
      * A mapping key type: any built-in **value** type,

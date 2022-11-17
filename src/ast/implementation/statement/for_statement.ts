@@ -6,7 +6,7 @@ import { Statement } from "./statement";
 import { VariableDeclarationStatement } from "./variable_declaration_statement";
 
 export class ForStatement extends Statement {
-	readonly type = "ForStatement";
+    readonly type = "ForStatement";
 
     /**
      * Variable declaration and initialization `uint x = 1`.

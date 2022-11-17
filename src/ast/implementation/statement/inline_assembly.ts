@@ -11,7 +11,7 @@ export interface YulNode {
 }
 
 export class InlineAssembly extends Statement {
-	readonly type = "InlineAssembly";
+    readonly type = "InlineAssembly";
 
     externalReferences: any[];
 

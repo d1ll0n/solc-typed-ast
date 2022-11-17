@@ -3,7 +3,7 @@ import { TypeName } from "../type/type_name";
 import { Expression } from "./expression";
 
 export class NewExpression extends Expression {
-	readonly type = "NewExpression";
+    readonly type = "NewExpression";
 
     /**
      * Type name of the new value

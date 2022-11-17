@@ -5,7 +5,7 @@ import { YulFunctionDefinition } from "../statement/yul_function_definition";
 import { YulASTNode } from "../yul_ast_node";
 
 export class YulFunctionCall extends YulExpression {
-	readonly type = "YulFunctionCall";
+    readonly type = "YulFunctionCall";
 
     /**
      * YulIdentifier that defines the callee

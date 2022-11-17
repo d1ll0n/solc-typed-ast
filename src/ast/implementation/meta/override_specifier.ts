@@ -3,7 +3,7 @@ import { UserDefinedTypeName } from "../type/user_defined_type_name";
 import { IdentifierPath } from "./identifier_path";
 
 export class OverrideSpecifier extends ASTNodeWithChildren<UserDefinedTypeName | IdentifierPath> {
-	readonly type = "OverrideSpecifier";
+    readonly type = "OverrideSpecifier";
 
     constructor(
         id: number,

@@ -5,7 +5,7 @@ import { YulStatement, YulStatementWithChildren } from "./yul_statement";
 export class YulBlock extends YulStatementWithChildren<
     YulStatement | YulStatementWithChildren<YulASTNode> | StructuredDocumentation
 > {
-	readonly type = "YulBlock";
+    readonly type = "YulBlock";
 
     constructor(
         id: number,

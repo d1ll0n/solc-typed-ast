@@ -2,7 +2,7 @@ import { EtherUnit, LiteralKind, TimeUnit } from "../../constants";
 import { PrimaryExpression } from "./primary_expression";
 
 export class Literal extends PrimaryExpression {
-	readonly type = "Literal";
+    readonly type = "Literal";
 
     /**
      * The type of literal: `number`, `string`, `bool`, `hexString` or `unicodeString`.

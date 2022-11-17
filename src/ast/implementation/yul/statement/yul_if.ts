@@ -5,7 +5,7 @@ import { YulBlock } from "./yul_block";
 import { YulStatement } from "./yul_statement";
 
 export class YulIf extends YulStatement {
-	readonly type = "YulIf";
+    readonly type = "YulIf";
 
     /**
      * Condition expression of the statement

@@ -6,7 +6,7 @@ import { YulASTNode } from "../yul_ast_node";
 import { YulStatement } from "./yul_statement";
 
 export class YulVariableDeclaration extends YulStatement {
-	readonly type = "YulVariableDeclaration";
+    readonly type = "YulVariableDeclaration";
 
     variables: YulTypedName[];
 

@@ -4,7 +4,7 @@ import { UserDefinedTypeName } from "../type/user_defined_type_name";
 import { IdentifierPath } from "./identifier_path";
 
 export class InheritanceSpecifier extends ASTNode {
-	readonly type = "InheritanceSpecifier";
+    readonly type = "InheritanceSpecifier";
 
     /**
      * A base contract type

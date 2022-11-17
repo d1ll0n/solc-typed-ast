@@ -31,7 +31,7 @@ import { TypeName } from "../type/type_name";
 import { StructDefinition } from "./struct_definition";
 
 export class VariableDeclaration extends ASTNode {
-	readonly type = "VariableDeclaration";
+    readonly type = "VariableDeclaration";
 
     /**
      * Set if the variable can not be assigned a new value after declaration

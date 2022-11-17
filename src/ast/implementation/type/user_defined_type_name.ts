@@ -3,7 +3,7 @@ import { IdentifierPath } from "../meta/identifier_path";
 import { TypeName } from "./type_name";
 
 export class UserDefinedTypeName extends TypeName {
-	readonly type = "UserDefinedTypeName";
+    readonly type = "UserDefinedTypeName";
 
     /**
      * Name of the defined type

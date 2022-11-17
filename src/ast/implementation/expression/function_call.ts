@@ -19,7 +19,7 @@ export type CallableDefinition =
     | VariableDeclaration;
 
 export class FunctionCall extends Expression {
-	readonly type = "FunctionCall";
+    readonly type = "FunctionCall";
 
     /**
      * Type of call: `functionCall`, `typeConversion` or `structConstructorCall`.

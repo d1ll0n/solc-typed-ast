@@ -5,7 +5,7 @@ import { YulCase } from "./yul_case";
 import { YulStatement } from "./yul_statement";
 
 export class YulSwitch extends YulStatement {
-	readonly type = "YulSwitch";
+    readonly type = "YulSwitch";
 
     vExpression: YulExpression;
 
