@@ -15,11 +15,21 @@ export class YulIdentifier extends YulExpression {
      */
     referencedDeclaration: number;
 
-    constructor(id: number, src: string, name: string, referencedDeclaration?: number, raw?: any) {
+    constructor(
+        id: number,
+        src: string,
+        name: string,
+        referencedDeclaration?: number | ASTNode,
+        raw?: any
+    ) {
         super(id, src, raw);
 
         this.name = name;
-        this.referencedDeclaration = referencedDeclaration ?? -1;
+        this.referencedDeclaration = referencedDeclaration
+            ? typeof referencedDeclaration === "number"
+                ? referencedDeclaration
+                : referencedDeclaration.id
+            : -1;
     }
 
     /**

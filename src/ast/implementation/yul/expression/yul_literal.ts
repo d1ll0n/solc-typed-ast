@@ -28,7 +28,7 @@ export class YulLiteral extends YulExpression {
         id: number,
         src: string,
         kind: YulLiteralKind,
-        value: string,
+        value: string | number | bigint | boolean,
         hexValue: string,
         typeString = "",
         raw?: any
@@ -36,7 +36,7 @@ export class YulLiteral extends YulExpression {
         super(id, src, raw);
 
         this.kind = kind;
-        this.value = value;
+        this.value = value.toString();
         this.hexValue = hexValue;
         this.typeString = typeString;
     }
