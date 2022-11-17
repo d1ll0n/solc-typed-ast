@@ -56,7 +56,12 @@ type InternalMake = <C extends ASTNodeConstructorType>(
     ...args: ExtractedArguments<C>
 ) => InstanceType<C>;
 
-type MakeClassFn<C extends ASTNodeConstructorType> = (
+type MakeNodeFunction<C extends ASTNodeConstructorType> = (
+    ...args: ExtractedArguments<C>
+) => InstanceType<C>;
+
+type StaticMakeNodeFunction<C extends ASTNodeConstructorType> = (
+    context: ASTContext,
     ...args: ExtractedArguments<C>
 ) => InstanceType<C>;
 
@@ -65,24 +70,51 @@ const getMakeFn = <C extends ASTNodeConstructorType>(ctor: C) =>
         return this.make(ctor, ...args);
     };
 
-type MakeMethods = {
-    [K in ASTNodeKind as `make${K}`]: MakeClassFn<ASTNodeConstructorMap[K]>;
+const getStaticMakeFn = <T extends ASTNode>(ctor: ASTNodeConstructor<T>) =>
+    function (context: ASTContext, ...args: Specific<ConstructorParameters<typeof ctor>>) {
+        const node = new ctor(context.lastId + 1, "0:0:0", ...args);
+        context.register(node);
+        return node;
+    };
+
+type NodeFactory = {
+    [K in ASTNodeKind as `make${K}`]: MakeNodeFunction<ASTNodeConstructorMap[K]>;
 };
 
+type StaticNodeFactory = {
+    [K in ASTNodeKind as `make${K}`]: StaticMakeNodeFunction<ASTNodeConstructorMap[K]>;
+};
+
+export const staticNodeFactory = ASTNodeClassEntries.reduce((obj, [key, ctor]) => {
+    Object.defineProperty(obj, `make${key}`, {
+        configurable: true,
+        writable: false,
+        enumerable: true,
+        value: getStaticMakeFn(ctor as any)
+    });
+    return obj;
+}, {} as StaticNodeFactory);
+
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface ASTNodeFactory extends MakeMethods {}
+export interface ASTNodeFactory extends NodeFactory {}
 
 export class ASTNodeFactory {
     context: ASTContext;
     postprocessor: ASTPostprocessor;
 
-    private lastId: number;
+    // private lastId: number;
+
+    get nextId(): number {
+        // @todo this is inefficient - probably best to remove factory's lastId
+        // and add similar tracking to ASTContext
+        return this.context.lastId + 1;
+    }
 
     constructor(context = new ASTContext(), postprocessor = new ASTPostprocessor()) {
         this.context = context;
         this.postprocessor = postprocessor;
 
-        this.lastId = context.lastId;
+        // this.lastId = context.lastId;
 
         for (const [key, ctor] of ASTNodeClassEntries) {
             Object.defineProperty(this, `make${key}`, {
@@ -203,7 +235,7 @@ export class ASTNodeFactory {
         type: ASTNodeConstructor<T>,
         ...args: Specific<ConstructorParameters<typeof type>>
     ): T {
-        const node = new type(++this.lastId, "0:0:0", ...args);
+        const node = new type(this.nextId, "0:0:0", ...args);
 
         this.context.register(node);
 
