@@ -1,6 +1,6 @@
 {
-    "name": "solc-typed-ast",
-    "version": "10.3.0",
+    "name": "@d1ll0n/solc-typed-ast",
+    "version": "10.3.2",
     "description": "A TypeScript library providing a normalized typed Solidity AST along with the utilities necessary to generate the AST (from Solc) and traverse/manipulate it.",
     "keywords": [],
     "files": [
@@ -28,6 +28,7 @@
         "prepare": "npm run build"
     },
     "dependencies": {
+        "mathjs": "npm:@d1ll0n/mathjs",
         "axios": "^1.1.0",
         "commander": "^9.4.1",
         "findup-sync": "^5.0.0",
@@ -61,6 +62,6 @@
     },
     "homepage": "https://consensys.github.io/solc-typed-ast",
     "bugs": "https://github.com/ConsenSys/solc-typed-ast/issues",
-    "repository": "https://github.com/ConsenSys/solc-typed-ast.git",
+    "repository": "https://github.com/d1ll0n/solc-typed-ast.git",
     "license": "Apache-2.0"
 }
