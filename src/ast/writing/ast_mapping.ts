@@ -1483,16 +1483,28 @@ class YulLiteralWriter extends ASTNodeWriter {
 
         return [result];
     }
+
+    writeWhole(node: YulLiteral, writer: ASTWriter): SrcDesc {
+        return [...writePrecedingDocs(node.documentation, writer), [node, this.writeInner(node)]];
+    }
 }
 
 class YulIdentifierWriter extends ASTNodeWriter {
     writeInner(node: YulIdentifier): SrcDesc {
         return [node.name];
     }
+
+    writeWhole(node: YulIdentifier, writer: ASTWriter): SrcDesc {
+        return [...writePrecedingDocs(node.documentation, writer), [node, this.writeInner(node)]];
+    }
 }
 class YulTypedNameWriter extends ASTNodeWriter {
     writeInner(node: YulTypedName): SrcDesc {
         return [node.typeString ? node.name + ":" + node.typeString : node.name];
+    }
+
+    writeWhole(node: YulTypedName, writer: ASTWriter): SrcDesc {
+        return [...writePrecedingDocs(node.documentation, writer), [node, this.writeInner(node)]];
     }
 }
 class YulFunctionCallWriter extends ASTNodeWriter {
@@ -1506,6 +1518,13 @@ class YulFunctionCallWriter extends ASTNodeWriter {
         elements.push(")");
 
         return writer.desc(...elements);
+    }
+
+    writeWhole(node: YulFunctionCall, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
     }
 }
 
