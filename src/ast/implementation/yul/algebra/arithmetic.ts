@@ -1,6 +1,15 @@
 /* eslint-disable no-prototype-builtins */
+import { MathNode } from "mathjs";
 import { YulExpression, YulFunctionCall } from "../expression";
-import { simplifyYulExpression } from "./algebra";
+import {
+    expressionEq,
+    expressionGt,
+    expressionGte,
+    expressionLt,
+    expressionLte,
+    simplifyYulExpression,
+    yulToMathNode
+} from "./algebra";
 import { getBuiltInFunctionCall, coerceExpressionList } from "./yul_builders";
 
 export type CastableToYulExpression = YulExpression | string | number;
@@ -225,12 +234,30 @@ const ExpressionPrototypes = {
     ...ArithmeticPrototypes,
     simplify: function (this: YulExpression) {
         return simplifyYulExpression(this);
+    },
+    toMathNode: function (this: YulExpression) {
+        return yulToMathNode(this);
+    },
+    isGt: function (this: YulExpression, node: YulExpression) {
+        return expressionGt(this, node);
+    },
+    isGte: function (this: YulExpression, node: YulExpression) {
+        return expressionGte(this, node);
+    },
+    isLt: function (this: YulExpression, node: YulExpression) {
+        return expressionLt(this, node);
+    },
+    isLte: function (this: YulExpression, node: YulExpression) {
+        return expressionLte(this, node);
+    },
+    isEq: function (this: YulExpression, node: YulExpression) {
+        return expressionEq(this, node);
     }
 };
 
 type BaseArithmeticAccessors = {
-    // smartAdd(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
-    // smartMul(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
+    smartAdd(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
+    smartMul(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
     add(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
     mul(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
     sub(this: YulExpression, y: CastableToYulExpression): YulFunctionCall;
@@ -293,6 +320,12 @@ interface DataAccessors {
 
 export interface ExpressionAccessors extends ArithmeticAccessors, DataAccessors {
     simplify: () => YulExpression;
+    toMathNode: () => MathNode;
+    isGt: (node: YulExpression) => 1 | 0 | -1;
+    isGte: (node: YulExpression) => 1 | 0 | -1;
+    isLt: (node: YulExpression) => 1 | 0 | -1;
+    isLte: (node: YulExpression) => 1 | 0 | -1;
+    isEq: (node: YulExpression) => 1 | 0 | -1;
 }
 
 export const withExpressionAccessors = <
