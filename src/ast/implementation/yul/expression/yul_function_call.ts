@@ -35,6 +35,28 @@ export class YulFunctionCall extends YulExpression {
         return this.pickNodes(this.vFunctionName, this.vArguments);
     }
 
+    removeChild(node: YulExpression): YulExpression {
+        const index = this.vArguments.indexOf(node);
+
+        if (index === -1) {
+            throw new Error("Reference node is not a child of current node");
+        }
+
+        this.vArguments.splice(index, 1);
+
+        node.parent = undefined;
+
+        return node;
+    }
+
+    appendChild(node: YulExpression): YulExpression {
+        this.vArguments.push(node);
+
+        node.parent = this;
+
+        return node;
+    }
+
     /**
      * Identifier of the function name, e.g. `sha3(...)`
      */
