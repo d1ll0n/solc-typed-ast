@@ -160,8 +160,6 @@ export class ASTNodeFactory {
     context: ASTContext;
     postprocessor: ASTPostprocessor;
 
-    // private lastId: number;
-
     get nextId(): number {
         // @todo this is inefficient - probably best to remove factory's lastId
         // and add similar tracking to ASTContext
