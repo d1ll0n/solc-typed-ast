@@ -81,19 +81,51 @@ type NodeFactory = {
     [K in ASTNodeKind as `make${K}`]: MakeNodeFunction<ASTNodeConstructorMap[K]>;
 };
 
-type StaticNodeFactory = {
+type BaseStaticNodeFactory = {
     [K in ASTNodeKind as `make${K}`]: StaticMakeNodeFunction<ASTNodeConstructorMap[K]>;
 };
 
-export const staticNodeFactory = ASTNodeClassEntries.reduce((obj, [key, ctor]) => {
-    Object.defineProperty(obj, `make${key}`, {
-        configurable: true,
-        writable: false,
-        enumerable: true,
-        value: getStaticMakeFn(ctor as any)
-    });
-    return obj;
-}, {} as StaticNodeFactory);
+interface StaticNodeFactory extends BaseStaticNodeFactory {
+    makeIdentifierFor(
+        target:
+            | VariableDeclaration
+            | ContractDefinition
+            | FunctionDefinition
+            | StructDefinition
+            | ErrorDefinition
+            | EventDefinition
+            | EnumDefinition
+            | UserDefinedValueTypeDefinition
+            | ImportDirective
+    ): Identifier;
+    makeYulIdentifierFor(
+        target:
+            | FunctionDefinition
+            | VariableDeclaration
+            | Identifier
+            | YulFunctionDefinition
+            | YulVariableDeclaration,
+        name?: string
+    ): YulIdentifier;
+    makeYulFunctionCallFor(fn: YulFunctionDefinition, parameters: YulExpression[]): YulFunctionCall;
+}
+
+export const staticNodeFactory = ASTNodeClassEntries.reduce(
+    (obj, [key, ctor]) => {
+        Object.defineProperty(obj, `make${key}`, {
+            configurable: true,
+            writable: false,
+            enumerable: true,
+            value: getStaticMakeFn(ctor as any)
+        });
+        return obj;
+    },
+    {
+        makeIdentifierFor,
+        makeYulIdentifierFor,
+        makeYulFunctionCallFor
+    } as StaticNodeFactory
+);
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface ASTNodeFactory extends NodeFactory {}
@@ -144,59 +176,7 @@ export class ASTNodeFactory {
             | UserDefinedValueTypeDefinition
             | ImportDirective
     ): Identifier {
-        let typeString: string;
-
-        if (target instanceof VariableDeclaration) {
-            typeString = target.typeString;
-        } else if (target instanceof FunctionDefinition) {
-            const args = target.vParameters.vParameters.map(this.typeExtractor);
-
-            const result = [`function (${args.join(",")})`];
-
-            if (target.stateMutability !== FunctionStateMutability.NonPayable) {
-                result.push(target.stateMutability);
-            }
-
-            if (target.visibility !== FunctionVisibility.Public) {
-                result.push(target.visibility);
-            }
-
-            if (target.vReturnParameters.vParameters.length) {
-                const rets = target.vReturnParameters.vParameters.map(this.typeExtractor);
-
-                result.push(`returns (${rets.join(",")})`);
-            }
-
-            typeString = result.join(" ");
-        } else if (target instanceof ContractDefinition) {
-            typeString = `type(contract ${target.name})`;
-        } else if (target instanceof StructDefinition) {
-            typeString = `type(struct ${target.canonicalName} storage pointer)`;
-        } else if (target instanceof EnumDefinition) {
-            typeString = `type(enum ${target.canonicalName})`;
-        } else if (target instanceof UserDefinedValueTypeDefinition) {
-            typeString = `type(${target.canonicalName})`;
-        } else if (target instanceof EventDefinition || target instanceof ErrorDefinition) {
-            const args = target.vParameters.vParameters.map(this.typeExtractor);
-
-            typeString = `function (${args.join(",")})`;
-        } else if (target instanceof ImportDirective) {
-            typeString = "<missing>";
-
-            if (target.unitAlias === "") {
-                throw new Error('Target ImportDirective required to have valid "unitAlias"');
-            }
-        } else {
-            throw new Error(
-                "ASTNodeFactory.makeIdentifierFor(): Unable to compose typeString for supplied target"
-            );
-        }
-
-        return this.makeIdentifier(
-            typeString,
-            target instanceof ImportDirective ? target.unitAlias : target.name,
-            target.id
-        );
+        return makeIdentifierFor(target);
     }
 
     makeYulIdentifierFor(
@@ -208,20 +188,7 @@ export class ASTNodeFactory {
             | YulVariableDeclaration,
         name?: string
     ): YulIdentifier {
-        if (target instanceof YulVariableDeclaration) {
-            if (target.variables.length === 1) {
-                name = target.variables[0].name;
-            } else if (
-                name === undefined ||
-                target.variables.find((v) => v.name === name) === undefined
-            ) {
-                const declarationString = `${target.type} (${target.variables.map((v) => v.name)})`;
-                throw Error(`variable ${name} not found in ${declarationString}`);
-            }
-        } else {
-            name = target.name;
-        }
-        return this.makeYulIdentifier(name, target.id);
+        return makeYulIdentifierFor(target, name);
     }
 
     makeYulFunctionCallFor(
@@ -387,8 +354,110 @@ export class ASTNodeFactory {
 
         throw new Error(`Cannot copy value ${JSON.stringify(value)} of type ${typeof value}`);
     }
+}
 
-    private typeExtractor(arg: VariableDeclaration): string {
-        return arg.typeString;
+const typeExtractor = (arg: VariableDeclaration): string => arg.typeString;
+
+function makeIdentifierFor(
+    target:
+        | VariableDeclaration
+        | ContractDefinition
+        | FunctionDefinition
+        | StructDefinition
+        | ErrorDefinition
+        | EventDefinition
+        | EnumDefinition
+        | UserDefinedValueTypeDefinition
+        | ImportDirective
+): Identifier {
+    let typeString: string;
+
+    if (target instanceof VariableDeclaration) {
+        typeString = target.typeString;
+    } else if (target instanceof FunctionDefinition) {
+        const args = target.vParameters.vParameters.map(typeExtractor);
+
+        const result = [`function (${args.join(",")})`];
+
+        if (target.stateMutability !== FunctionStateMutability.NonPayable) {
+            result.push(target.stateMutability);
+        }
+
+        if (target.visibility !== FunctionVisibility.Public) {
+            result.push(target.visibility);
+        }
+
+        if (target.vReturnParameters.vParameters.length) {
+            const rets = target.vReturnParameters.vParameters.map(typeExtractor);
+
+            result.push(`returns (${rets.join(",")})`);
+        }
+
+        typeString = result.join(" ");
+    } else if (target instanceof ContractDefinition) {
+        typeString = `type(contract ${target.name})`;
+    } else if (target instanceof StructDefinition) {
+        typeString = `type(struct ${target.canonicalName} storage pointer)`;
+    } else if (target instanceof EnumDefinition) {
+        typeString = `type(enum ${target.canonicalName})`;
+    } else if (target instanceof UserDefinedValueTypeDefinition) {
+        typeString = `type(${target.canonicalName})`;
+    } else if (target instanceof EventDefinition || target instanceof ErrorDefinition) {
+        const args = target.vParameters.vParameters.map(typeExtractor);
+
+        typeString = `function (${args.join(",")})`;
+    } else if (target instanceof ImportDirective) {
+        typeString = "<missing>";
+
+        if (target.unitAlias === "") {
+            throw new Error('Target ImportDirective required to have valid "unitAlias"');
+        }
+    } else {
+        throw new Error(
+            "ASTNodeFactory.makeIdentifierFor(): Unable to compose typeString for supplied target"
+        );
     }
+
+    return staticNodeFactory.makeIdentifier(
+        target.requiredContext,
+        typeString,
+        target instanceof ImportDirective ? target.unitAlias : target.name,
+        target.id
+    );
+}
+
+function makeYulIdentifierFor(
+    target:
+        | FunctionDefinition
+        | VariableDeclaration
+        | Identifier
+        | YulFunctionDefinition
+        | YulVariableDeclaration,
+    name?: string
+): YulIdentifier {
+    if (target instanceof YulVariableDeclaration) {
+        if (target.variables.length === 1) {
+            name = target.variables[0].name;
+        } else if (
+            name === undefined ||
+            target.variables.find((v) => v.name === name) === undefined
+        ) {
+            const declarationString = `${target.type} (${target.variables.map((v) => v.name)})`;
+            throw Error(`variable ${name} not found in ${declarationString}`);
+        }
+    } else {
+        name = target.name;
+    }
+    return staticNodeFactory.makeYulIdentifier(target.requiredContext, name, target.id);
+}
+
+function makeYulFunctionCallFor(
+    fn: YulFunctionDefinition,
+    parameters: YulExpression[]
+): YulFunctionCall {
+    return staticNodeFactory.makeYulFunctionCall(
+        fn.requiredContext,
+        staticNodeFactory.makeYulIdentifierFor(fn),
+        parameters
+    );
 }
