@@ -1554,7 +1554,7 @@ class YulExpressionStatementWriter extends ASTNodeWriter {
 
 class YulAssignmentWriter implements ASTNodeWriter {
     writeInner(node: YulAssignment, writer: ASTWriter): SrcDesc {
-        const elements: DescArgs = ["let ", ...join(node.variableNames, ","), ` := `, node.value];
+        const elements: DescArgs = [...join(node.variableNames, ","), ` := `, node.value];
 
         return writer.desc(...elements);
     }
