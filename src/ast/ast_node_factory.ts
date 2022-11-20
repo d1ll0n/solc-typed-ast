@@ -27,9 +27,19 @@ import {
     YulFunctionDefinition,
     YulExpression,
     YulVariableDeclaration,
-    YulFunctionCall
+    YulFunctionCall,
+    Literal,
+    ElementaryTypeName
 } from "./implementation";
-import { FunctionStateMutability, FunctionVisibility } from "./constants";
+import {
+    DataLocation,
+    FunctionStateMutability,
+    FunctionVisibility,
+    LiteralKind,
+    Mutability,
+    StateVariableVisibility
+} from "./constants";
+import { utf8ToHex } from "../misc/hex";
 
 /**
  * When applied to following tuple type:
@@ -98,6 +108,7 @@ interface StaticNodeFactory extends BaseStaticNodeFactory {
             | UserDefinedValueTypeDefinition
             | ImportDirective
     ): Identifier;
+
     makeYulIdentifierFor(
         target:
             | FunctionDefinition
@@ -107,7 +118,19 @@ interface StaticNodeFactory extends BaseStaticNodeFactory {
             | YulVariableDeclaration,
         name?: string
     ): YulIdentifier;
+
     makeYulFunctionCallFor(fn: YulFunctionDefinition, parameters: YulExpression[]): YulFunctionCall;
+
+    makeTypeNameUint256(ctx: ASTContext): ElementaryTypeName;
+
+    makeLiteralUint256(ctx: ASTContext, n: string | number): Literal;
+
+    makeConstantUint256(
+        ctx: ASTContext,
+        name: string,
+        value: string | number,
+        scope: number
+    ): VariableDeclaration;
 }
 
 export const staticNodeFactory = ASTNodeClassEntries.reduce(
@@ -123,7 +146,10 @@ export const staticNodeFactory = ASTNodeClassEntries.reduce(
     {
         makeIdentifierFor,
         makeYulIdentifierFor,
-        makeYulFunctionCallFor
+        makeYulFunctionCallFor,
+        makeTypeNameUint256,
+        makeLiteralUint256,
+        makeConstantUint256
     } as StaticNodeFactory
 );
 
@@ -146,8 +172,6 @@ export class ASTNodeFactory {
         this.context = context;
         this.postprocessor = postprocessor;
 
-        // this.lastId = context.lastId;
-
         for (const [key, ctor] of ASTNodeClassEntries) {
             Object.defineProperty(this, `make${key}`, {
                 configurable: true,
@@ -156,6 +180,18 @@ export class ASTNodeFactory {
                 value: getMakeFn(ctor)
             });
         }
+    }
+
+    makeTypeNameUint256(): ElementaryTypeName {
+        return makeTypeNameUint256(this.context);
+    }
+
+    makeLiteralUint256(value: string | number): Literal {
+        return makeLiteralUint256(this.context, value);
+    }
+
+    makeConstantUint256(name: string, value: string | number, scope: number): VariableDeclaration {
+        return makeConstantUint256(this.context, name, value, scope);
     }
 
     makePrimaryExpression(
@@ -459,5 +495,44 @@ function makeYulFunctionCallFor(
         fn.requiredContext,
         staticNodeFactory.makeYulIdentifierFor(fn),
         parameters
+    );
+}
+
+function makeTypeNameUint256(ctx: ASTContext): ElementaryTypeName {
+    return staticNodeFactory.makeElementaryTypeName(ctx, "uint256", "uint256", "nonpayable");
+}
+
+function makeLiteralUint256(ctx: ASTContext, n: string | number): Literal {
+    const value = n.toString();
+    return staticNodeFactory.makeLiteral(
+        ctx,
+        `int_const ${value}`,
+        LiteralKind.Number,
+        utf8ToHex(value),
+        value
+    );
+}
+
+function makeConstantUint256(
+    ctx: ASTContext,
+    name: string,
+    value: string | number,
+    scope: number
+): VariableDeclaration {
+    return staticNodeFactory.makeVariableDeclaration(
+        ctx,
+        true,
+        false,
+        name,
+        scope,
+        false,
+        DataLocation.Default,
+        StateVariableVisibility.Internal,
+        Mutability.Constant,
+        "uint256",
+        undefined,
+        makeTypeNameUint256(ctx),
+        undefined,
+        makeLiteralUint256(ctx, value)
     );
 }
