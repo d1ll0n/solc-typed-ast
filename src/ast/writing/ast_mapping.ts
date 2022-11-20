@@ -1680,7 +1680,7 @@ class YulFunctionDefinitionWriter implements ASTNodeWriter {
             ")"
         ];
         if (node.vReturnParameters.length) {
-            result.push(" -> ", ...join(node.vParameters, ", "));
+            result.push(" -> ", ...join(node.vReturnParameters, ", "));
         }
         return result;
     }
