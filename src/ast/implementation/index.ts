@@ -143,13 +143,13 @@ type ClassesList = typeof ASTNodeConstructorsList;
 type ASTNodeClassEntriesType = [
     ...ArrayToEntriesWithKey<TupleSlice<ClassesList, 0, 20>, "type">,
     ...ArrayToEntriesWithKey<TupleSlice<ClassesList, 20, 40>, "type">,
-    ...ArrayToEntriesWithKey<TupleSlice<ClassesList, 40, 60>, "type">
+    ...ArrayToEntriesWithKey<TupleSlice<ClassesList, 40, 60>, "type">,
+    ...ArrayToEntriesWithKey<TupleSlice<ClassesList, 60, 80>, "type">
 ];
 export type ASTNodeClassEntry = ASTNodeClassEntriesType[number];
 export type ASTNodeConstructorType = ASTNodeClassEntry[1];
 export type ASTNodeType = InstanceType<ASTNodeClassEntry[1]>;
 export type ASTNodeKind = ASTNodeType["type"];
-
 export type ASTNodeConstructorMap = {
     [K in ASTNodeKind]: Extract<ASTNodeConstructorType, Constructor<{ type: K }>>;
 };
