@@ -248,17 +248,24 @@ function writePrecedingDocs(
 }
 
 class StructuredDocumentationWriter extends ASTNodeWriter {
-    static render(text: string, formatter: SourceFormatter): string {
+    static render(text: string, formatter: SourceFormatter, useJsDocFormat?: boolean): string {
         const indent = formatter.renderIndent();
-        const prefix = "/// ";
-
+        const prefix = useJsDocFormat ? ` * ` : "/// ";
         const documentation = text.replace(/\n/g, (sub) => sub + indent + prefix);
-
+        if (useJsDocFormat) {
+            if (text.includes("\n")) {
+                const wrap = formatter.renderWrap();
+                return ["/**", indent + prefix + documentation, indent + " */"].join(wrap);
+            }
+            return [`/**`, documentation, "*/"].join(" ");
+        }
         return prefix + documentation;
     }
 
     writeInner(node: StructuredDocumentation, writer: ASTWriter): SrcDesc {
-        return [StructuredDocumentationWriter.render(node.text, writer.formatter)];
+        return [
+            StructuredDocumentationWriter.render(node.text, writer.formatter, node.useJsDocFormat)
+        ];
     }
 }
 

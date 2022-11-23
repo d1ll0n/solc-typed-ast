@@ -8,6 +8,8 @@ export class StructuredDocumentation extends ASTNode {
      */
     text: string;
 
+    useJsDocFormat?: boolean;
+
     constructor(id: number, src: string, text: string, raw?: any) {
         super(id, src, raw);
 
