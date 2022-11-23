@@ -1,5 +1,7 @@
+import { isInstanceOf } from "../../misc";
 import { ASTNode } from "../ast_node";
 import { ASTContext, ASTNodePostprocessor } from "../ast_reader";
+import { YulExpression, YulStatement } from "../implementation";
 import {
     ContractDefinition,
     ErrorDefinition,
@@ -211,7 +213,9 @@ type SupportedNode =
     | EventDefinition
     | ModifierDefinition
     | Statement
-    | StatementWithChildren<any>;
+    | StatementWithChildren<any>
+    | YulExpression
+    | YulStatement;
 
 export class StructuredDocumentationReconstructingPostprocessor
     implements ASTNodePostprocessor<SupportedNode>
@@ -271,15 +275,20 @@ export class StructuredDocumentationReconstructingPostprocessor
 
     isSupportedNode(node: ASTNode): node is SupportedNode {
         return (
-            node instanceof FunctionDefinition ||
-            node instanceof ContractDefinition ||
-            node instanceof ErrorDefinition ||
-            node instanceof EventDefinition ||
-            node instanceof ModifierDefinition ||
+            isInstanceOf(
+                node,
+                FunctionDefinition,
+                ContractDefinition,
+                ErrorDefinition,
+                EventDefinition,
+                ModifierDefinition,
+                Statement,
+                StatementWithChildren,
+                YulStatement,
+                YulExpression
+            ) ||
             (node instanceof VariableDeclaration &&
-                (node.parent instanceof ContractDefinition || node.parent instanceof SourceUnit)) ||
-            node instanceof Statement ||
-            node instanceof StatementWithChildren
+                isInstanceOf(node.parent, ContractDefinition, SourceUnit))
         );
     }
 }
