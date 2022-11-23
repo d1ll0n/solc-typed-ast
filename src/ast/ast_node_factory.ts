@@ -29,10 +29,13 @@ import {
     YulVariableDeclaration,
     YulFunctionCall,
     Literal,
-    ElementaryTypeName
+    ElementaryTypeName,
+    Expression,
+    FunctionCall
 } from "./implementation";
 import {
     DataLocation,
+    FunctionCallKind,
     FunctionStateMutability,
     FunctionVisibility,
     LiteralKind,
@@ -95,29 +98,28 @@ type BaseStaticNodeFactory = {
     [K in ASTNodeKind as `make${K}`]: StaticMakeNodeFunction<ASTNodeConstructorMap[K]>;
 };
 
-interface StaticNodeFactory extends BaseStaticNodeFactory {
-    makeIdentifierFor(
-        target:
-            | VariableDeclaration
-            | ContractDefinition
-            | FunctionDefinition
-            | StructDefinition
-            | ErrorDefinition
-            | EventDefinition
-            | EnumDefinition
-            | UserDefinedValueTypeDefinition
-            | ImportDirective
-    ): Identifier;
+type IdentifiableNode =
+    | VariableDeclaration
+    | ContractDefinition
+    | FunctionDefinition
+    | StructDefinition
+    | ErrorDefinition
+    | EventDefinition
+    | EnumDefinition
+    | UserDefinedValueTypeDefinition
+    | ImportDirective;
 
-    makeYulIdentifierFor(
-        target:
-            | FunctionDefinition
-            | VariableDeclaration
-            | Identifier
-            | YulFunctionDefinition
-            | YulVariableDeclaration,
-        name?: string
-    ): YulIdentifier;
+type IdentifiableYulNode =
+    | FunctionDefinition
+    | VariableDeclaration
+    | Identifier
+    | YulFunctionDefinition
+    | YulVariableDeclaration;
+
+interface StaticNodeFactory extends BaseStaticNodeFactory {
+    makeIdentifierFor(target: IdentifiableNode): Identifier;
+
+    makeYulIdentifierFor(target: IdentifiableYulNode, name?: string): YulIdentifier;
 
     makeYulFunctionCallFor(fn: YulFunctionDefinition, parameters: YulExpression[]): YulFunctionCall;
 
@@ -131,6 +133,8 @@ interface StaticNodeFactory extends BaseStaticNodeFactory {
         value: string | number,
         scope: number
     ): VariableDeclaration;
+
+    makeFunctionCallFor(fn: FunctionDefinition, args: Expression[]): FunctionCall;
 }
 
 export const staticNodeFactory = ASTNodeClassEntries.reduce(
@@ -146,6 +150,7 @@ export const staticNodeFactory = ASTNodeClassEntries.reduce(
     {
         makeIdentifierFor,
         makeYulIdentifierFor,
+        makeFunctionCallFor,
         makeYulFunctionCallFor,
         makeTypeNameUint256,
         makeLiteralUint256,
@@ -180,6 +185,23 @@ export class ASTNodeFactory {
         }
     }
 
+    makeFunctionCallFor(fn: FunctionDefinition, args: Expression[]): FunctionCall {
+        return makeFunctionCallFor(fn, args);
+    }
+
+    makeVariableDeclarationStatementFromFunctionCall(
+        functionCall: FunctionCall
+    ): VariableDeclarationStatement {
+        const variableDeclarations = (
+            functionCall.vReferencedDeclaration as FunctionDefinition
+        )?.vReturnParameters.vParameters.map((p) => this.copy(p));
+        return this.makeVariableDeclarationStatement(
+            variableDeclarations.map((v) => v.id),
+            variableDeclarations,
+            functionCall
+        );
+    }
+
     makeTypeNameUint256(): ElementaryTypeName {
         return makeTypeNameUint256(this.context);
     }
@@ -198,30 +220,11 @@ export class ASTNodeFactory {
         return this.make(PrimaryExpression, ...args);
     }
 
-    makeIdentifierFor(
-        target:
-            | VariableDeclaration
-            | ContractDefinition
-            | FunctionDefinition
-            | StructDefinition
-            | ErrorDefinition
-            | EventDefinition
-            | EnumDefinition
-            | UserDefinedValueTypeDefinition
-            | ImportDirective
-    ): Identifier {
+    makeIdentifierFor(target: IdentifiableNode): Identifier {
         return makeIdentifierFor(target);
     }
 
-    makeYulIdentifierFor(
-        target:
-            | FunctionDefinition
-            | VariableDeclaration
-            | Identifier
-            | YulFunctionDefinition
-            | YulVariableDeclaration,
-        name?: string
-    ): YulIdentifier {
+    makeYulIdentifierFor(target: IdentifiableYulNode, name?: string): YulIdentifier {
         return makeYulIdentifierFor(target, name);
     }
 
@@ -392,18 +395,7 @@ export class ASTNodeFactory {
 
 const typeExtractor = (arg: VariableDeclaration): string => arg.typeString;
 
-function makeIdentifierFor(
-    target:
-        | VariableDeclaration
-        | ContractDefinition
-        | FunctionDefinition
-        | StructDefinition
-        | ErrorDefinition
-        | EventDefinition
-        | EnumDefinition
-        | UserDefinedValueTypeDefinition
-        | ImportDirective
-): Identifier {
+function makeIdentifierFor(target: IdentifiableNode): Identifier {
     let typeString: string;
 
     if (target instanceof VariableDeclaration) {
@@ -460,15 +452,7 @@ function makeIdentifierFor(
     );
 }
 
-function makeYulIdentifierFor(
-    target:
-        | FunctionDefinition
-        | VariableDeclaration
-        | Identifier
-        | YulFunctionDefinition
-        | YulVariableDeclaration,
-    name?: string
-): YulIdentifier {
+function makeYulIdentifierFor(target: IdentifiableYulNode, name?: string): YulIdentifier {
     if (target instanceof YulVariableDeclaration) {
         if (target.variables.length === 1) {
             name = target.variables[0].name;
@@ -532,5 +516,29 @@ function makeConstantUint256(
         makeTypeNameUint256(ctx),
         undefined,
         makeLiteralUint256(ctx, value)
+    );
+}
+
+function makeFunctionCallFor(fn: FunctionDefinition, args: Expression[]): FunctionCall {
+    const {
+        vParameters: { vParameters }
+    } = fn;
+
+    const paramTypeStrings = vParameters.map((v) => v.typeString);
+
+    const functionTypeString = (
+        paramTypeStrings.length > 1 ? `tuple(${paramTypeStrings.join(",")})` : paramTypeStrings[0]
+    )
+        .replace(/(struct\s+)([\w\d]+)/g, "$1$2 memory")
+        .replace(/\[\]/g, "[] memory");
+
+    const identifier = staticNodeFactory.makeIdentifierFor(fn);
+
+    return staticNodeFactory.makeFunctionCall(
+        fn.requiredContext,
+        functionTypeString,
+        FunctionCallKind.FunctionCall,
+        identifier,
+        args
     );
 }
