@@ -298,7 +298,8 @@ export class ASTNodeFactory {
             node instanceof Identifier ||
             node instanceof IdentifierPath ||
             node instanceof MemberAccess ||
-            node instanceof UserDefinedTypeName
+            node instanceof UserDefinedTypeName ||
+            node instanceof YulIdentifier
         ) {
             node.referencedDeclaration = patch(node.referencedDeclaration);
         }
