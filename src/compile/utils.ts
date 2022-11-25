@@ -14,7 +14,7 @@ import {
     RangeVersionStrategy,
     VersionDetectionStrategy
 } from "./compiler_selection";
-import { CompilationOutput, CompilerKind, CompilerVersions } from "./constants";
+import { CompilationOutput, CompilerKind } from "./constants";
 import { Remapping } from "./import_resolver";
 import { findAllFiles } from "./inference";
 import { createCompilerInput } from "./input";
