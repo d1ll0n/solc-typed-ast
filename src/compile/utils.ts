@@ -319,14 +319,7 @@ function getResolvers(basePath?: string, includePath?: string[]) {
     };
 }
 
-export async function compileSol(
-    input: string | string[],
-    version: string | CompilerVersionSelectionStrategy,
-    pathOptions: PathOptions = {},
-    compilationOutput: CompilationOutput[] = [CompilationOutput.ALL],
-    compilerSettings?: any,
-    kind?: CompilerKind
-): Promise<CompileResult> {
+function buildCompileOptionsForFiles(input: string | string[], pathOptions: PathOptions = {}) {
     const fileNames = typeof input === "string" ? [input] : input;
 
     assert(fileNames.length > 0, "There must be at least one file to compile");
@@ -375,6 +368,22 @@ export async function compileSol(
         findAllFiles(files, resolvedFileNames, parsedRemapping, resolvers, visited);
     }
 
+    return { files, resolvedFileNames, inferredRemappings, remapping };
+}
+
+export async function compileSol(
+    input: string | string[],
+    version: string | CompilerVersionSelectionStrategy,
+    pathOptions: PathOptions = {},
+    compilationOutput: CompilationOutput[] = [CompilationOutput.ALL],
+    compilerSettings?: any,
+    kind?: CompilerKind
+): Promise<CompileResult> {
+    const { files, remapping, resolvedFileNames, inferredRemappings } = buildCompileOptionsForFiles(
+        input,
+        pathOptions
+    );
+
     const compilerVersionStrategy = getCompilerVersionStrategy([...files.values()], version);
     const failures: CompileFailure[] = [];
 
@@ -404,6 +413,32 @@ export async function compileSol(
     }
 
     throw new CompileFailedError(failures);
+}
+
+export function compileSolSync(
+    compiler: NativeCompiler | WasmCompiler,
+    input: string | string[],
+    pathOptions: PathOptions = {},
+    compilationOutput: CompilationOutput[] = [CompilationOutput.ALL],
+    compilerSettings?: any
+): CompileResult {
+    const { files, remapping, resolvedFileNames, inferredRemappings } = buildCompileOptionsForFiles(
+        input,
+        pathOptions
+    );
+    const data = compileSync(compiler, files, remapping, compilationOutput, compilerSettings);
+    const errors = detectCompileErrors(data);
+
+    if (errors.length === 0) {
+        return {
+            data,
+            compilerVersion: compiler.version,
+            files,
+            resolvedFileNames,
+            inferredRemappings
+        };
+    }
+    throw new CompileFailedError([{ compilerVersion: compiler.version, errors }]);
 }
 
 export async function compileJsonData(
