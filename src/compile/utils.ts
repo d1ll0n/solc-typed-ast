@@ -319,7 +319,17 @@ function getResolvers(basePath?: string, includePath?: string[]) {
     };
 }
 
-function buildCompileOptionsForFiles(input: string | string[], pathOptions: PathOptions = {}) {
+type FilesAndRemappings = {
+    files: Map<string, string>;
+    resolvedFileNames: Map<string, string>;
+    inferredRemappings: Map<string, Remapping>;
+    remapping: string[];
+};
+
+export function getFilesAndRemappings(
+    input: string | string[],
+    pathOptions: PathOptions = {}
+): FilesAndRemappings {
     const fileNames = typeof input === "string" ? [input] : input;
 
     assert(fileNames.length > 0, "There must be at least one file to compile");
@@ -379,7 +389,7 @@ export async function compileSol(
     compilerSettings?: any,
     kind?: CompilerKind
 ): Promise<CompileResult> {
-    const { files, remapping, resolvedFileNames, inferredRemappings } = buildCompileOptionsForFiles(
+    const { files, remapping, resolvedFileNames, inferredRemappings } = getFilesAndRemappings(
         input,
         pathOptions
     );
@@ -422,7 +432,7 @@ export function compileSolSync(
     compilationOutput: CompilationOutput[] = [CompilationOutput.ALL],
     compilerSettings?: any
 ): CompileResult {
-    const { files, remapping, resolvedFileNames, inferredRemappings } = buildCompileOptionsForFiles(
+    const { files, remapping, resolvedFileNames, inferredRemappings } = getFilesAndRemappings(
         input,
         pathOptions
     );
