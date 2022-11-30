@@ -68,9 +68,13 @@ export class NativeCompiler extends Compiler {
     }
 
     compileSync(input: SolcInput): any {
-        const { stderr, stdout, status } = spawnSync(this.path, ["--standard-json"], {
-            input: JSON.stringify(input)
+        const { stderr, stdout, status, error } = spawnSync(this.path, ["--standard-json"], {
+            input: JSON.stringify(input),
+            maxBuffer: 1024 * 1024 * 10
         });
+        if (error) {
+            throw error;
+        }
         if (status !== 0) {
             throw Error(`Compiler exited with code ${status}, stderr: ${stderr}`);
         }
