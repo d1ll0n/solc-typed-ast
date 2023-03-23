@@ -13,7 +13,6 @@ export function extractDocumentationText(docBlock: string): string {
         for (const replacer of replacers) {
             line = line.replace(replacer, "");
         }
-        console.log(line);
         result.push(line);
     }
 
