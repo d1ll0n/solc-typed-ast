@@ -1,6 +1,25 @@
 import { ASTNode, ASTNodeWithChildren } from "./ast_node";
 import { StructuredDocumentation } from "./implementation/meta";
 
+export function extractDocumentationText(docBlock: string): string {
+    const result: string[] = [];
+
+    const replacers = docBlock.startsWith("///") ? ["/// ", "///"] : ["/**", "*/", "* ", "*"];
+    const lines = docBlock.split("\n");
+
+    for (let line of lines) {
+        line = line.trimStart();
+
+        for (const replacer of replacers) {
+            line = line.replace(replacer, "");
+        }
+        console.log(line);
+        result.push(line);
+    }
+
+    return result.join("\n").trim();
+}
+
 export interface WithPrecedingDocs {
     documentation?: string | StructuredDocumentation;
 

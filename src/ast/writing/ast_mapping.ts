@@ -1034,6 +1034,13 @@ class StructDefinitionWriter extends ASTNodeWriter {
         return ["struct ", node.name, " ", ...this.getBody(node, writer)];
     }
 
+    writeWhole(node: StructDefinition, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
+    }
+
     private getBody(node: StructDefinition, writer: ASTWriter): SrcDesc {
         if (node.vMembers.length === 0) {
             return ["{}"];
@@ -1219,6 +1226,13 @@ class EnumValueWriter extends ASTNodeWriter {
 class EnumDefinitionWriter extends ASTNodeWriter {
     writeInner(node: EnumDefinition, writer: ASTWriter): SrcDesc {
         return writer.desc("enum ", node.name, " ", "{ ", ...join(node.vMembers, ", "), " }");
+    }
+
+    writeWhole(node: EnumDefinition, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
     }
 }
 
