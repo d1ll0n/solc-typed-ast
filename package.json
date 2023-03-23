@@ -28,17 +28,17 @@
         "prepare": "npm run build"
     },
     "dependencies": {
-        "mathjs": "npm:@d1ll0n/mathjs",
         "axios": "^1.1.0",
         "commander": "^9.4.1",
+        "decimal.js": "^10.4.1",
         "findup-sync": "^5.0.0",
         "fs-extra": "^10.1.0",
         "jsel": "^1.1.6",
+        "mathjs": "npm:@d1ll0n/mathjs",
         "semver": "^7.3.8",
         "solc": "^0.8.17",
         "src-location": "^1.1.0",
-        "web3-eth-abi": "^1.8.0",
-        "decimal.js": "^10.4.1"
+        "web3-eth-abi": "^1.8.0"
     },
     "devDependencies": {
         "@types/fs-extra": "^9.0.13",
