@@ -44,7 +44,7 @@ describe("ASTNodeFormatter", () => {
                 "    id: 1",
                 '    src: "1:2:3"',
                 "    context: ASTContext #555",
-                '    <getter> type: "ASTNode"',
+                '    type: "ASTNode"',
                 "    <getter> children: Array(0)",
                 "    <getter> firstChild: undefined",
                 "    <getter> lastChild: undefined",

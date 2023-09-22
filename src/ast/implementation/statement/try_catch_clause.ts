@@ -5,6 +5,8 @@ import { Block } from "./block";
 import { Statement } from "./statement";
 
 export class TryCatchClause extends Statement {
+    readonly type = "TryCatchClause";
+
     /**
      * Error string. Contains empty string if `Error` is not specified.
      */

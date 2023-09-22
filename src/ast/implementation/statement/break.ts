@@ -1,3 +1,5 @@
 import { Statement } from "./statement";
 
-export class Break extends Statement {}
+export class Break extends Statement {
+    readonly type = "Break";
+}

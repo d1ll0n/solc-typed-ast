@@ -1,4 +1,5 @@
 import { ASTReader, ASTReaderConfiguration } from "../ast_reader";
+import { StructuredDocumentation } from "../implementation";
 import { EnumDefinition } from "../implementation/declaration/enum_definition";
 import { EnumValue } from "../implementation/declaration/enum_value";
 import { ModernNodeProcessor } from "./node_processor";
@@ -16,6 +17,15 @@ export class ModernEnumDefinitionProcessor extends ModernNodeProcessor<EnumDefin
 
         const members = reader.convertArray(raw.members, config) as EnumValue[];
 
-        return [id, src, name, members, nameLocation, raw];
+        let documentation: string | StructuredDocumentation | undefined;
+
+        if (raw.documentation) {
+            documentation =
+                typeof raw.documentation === "string"
+                    ? raw.documentation
+                    : reader.convert(raw.documentation, config);
+        }
+
+        return [id, src, name, members, documentation, nameLocation, raw];
     }
 }

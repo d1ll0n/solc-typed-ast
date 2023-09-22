@@ -4,6 +4,8 @@ import { StructuredDocumentation } from "../meta";
 import { Statement } from "./statement";
 
 export class DoWhileStatement extends Statement {
+    readonly type = "DoWhileStatement";
+
     /**
      * Continuation condition, e.g. `x < 10` in `do { ... } while (x < 10)`
      */

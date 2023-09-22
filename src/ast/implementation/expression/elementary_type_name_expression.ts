@@ -3,6 +3,8 @@ import { ElementaryTypeName } from "../type/elementary_type_name";
 import { Expression } from "./expression";
 
 export class ElementaryTypeNameExpression extends Expression {
+    readonly type = "ElementaryTypeNameExpression";
+
     /**
      * Name of the conversion function.
      *

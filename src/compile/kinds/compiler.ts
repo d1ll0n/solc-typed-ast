@@ -1,5 +1,5 @@
 import axios from "axios";
-import { spawn } from "child_process";
+import { spawn, spawnSync } from "child_process";
 import crypto from "crypto";
 import fse from "fs-extra";
 import path from "path";
@@ -19,6 +19,8 @@ export abstract class Compiler {
     constructor(public readonly version: string, public readonly path: string) {}
 
     abstract compile(inputJson: SolcInput): Promise<any>;
+
+    abstract compileSync(inputJson: SolcInput): any;
 }
 
 export class NativeCompiler extends Compiler {
@@ -64,16 +66,38 @@ export class NativeCompiler extends Compiler {
             });
         });
     }
+
+    compileSync(input: SolcInput): any {
+        const { stderr, stdout, status, error } = spawnSync(this.path, ["--standard-json"], {
+            input: JSON.stringify(input),
+            maxBuffer: 1024 * 1024 * 10
+        });
+        if (error) {
+            throw error;
+        }
+        if (status !== 0) {
+            throw Error(`Compiler exited with code ${status}, stderr: ${stderr}`);
+        }
+        if (stderr && stderr.toString() !== "") {
+            throw Error(`Compiler exited with non-empty stderr: ${stderr}`);
+        }
+        const outJson = JSON.parse(stdout.toString());
+        return outJson;
+    }
 }
 
 export class WasmCompiler extends Compiler {
-    async compile(input: SolcInput): Promise<any> {
+    compileSync(input: SolcInput): any {
         const solc = require("solc");
         const module = require(this.path);
         const wrappedModule = solc.setupMethods(module);
         const output = wrappedModule.compile(JSON.stringify(input));
 
         return JSON.parse(output);
+    }
+
+    async compile(input: SolcInput): Promise<any> {
+        return this.compileSync(input);
     }
 }
 

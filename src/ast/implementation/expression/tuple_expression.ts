@@ -2,6 +2,8 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class TupleExpression extends Expression {
+    readonly type = "TupleExpression";
+
     /**
      * Indicate if tuple is an inline array definition.
      */

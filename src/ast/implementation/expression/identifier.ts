@@ -3,6 +3,8 @@ import { ExternalReferenceType } from "../../constants";
 import { PrimaryExpression } from "./primary_expression";
 
 export class Identifier extends PrimaryExpression {
+    readonly type = "Identifier";
+
     /**
      * Name of the identifier
      */

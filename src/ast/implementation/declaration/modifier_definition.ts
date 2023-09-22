@@ -8,6 +8,8 @@ import { Block } from "../statement/block";
 import { ContractDefinition } from "./contract_definition";
 
 export class ModifierDefinition extends ASTNode {
+    readonly type = "ModifierDefinition";
+
     /**
      * Modifier name
      */

@@ -1,10 +1,15 @@
 import { enumToIntType, getFQDefName } from "../../..";
-import { ASTNodeWithChildren } from "../../ast_node";
+import { ASTNode, ASTNodeWithChildren } from "../../ast_node";
 import { SourceUnit } from "../meta/source_unit";
 import { ContractDefinition } from "./contract_definition";
 import { EnumValue } from "./enum_value";
+import { StructuredDocumentation } from "../meta/structured_documentation";
 
 export class EnumDefinition extends ASTNodeWithChildren<EnumValue> {
+    readonly type = "EnumDefinition";
+
+    documentation?: string | StructuredDocumentation;
+
     /**
      * The name of the enum
      */
@@ -20,6 +25,7 @@ export class EnumDefinition extends ASTNodeWithChildren<EnumValue> {
         src: string,
         name: string,
         members: Iterable<EnumValue>,
+        documentation?: string | StructuredDocumentation,
         nameLocation?: string,
         raw?: any
     ) {
@@ -31,7 +37,10 @@ export class EnumDefinition extends ASTNodeWithChildren<EnumValue> {
             this.appendChild(member);
         }
 
+        this.documentation = documentation;
+
         this.nameLocation = nameLocation;
+        this.acceptChildren();
     }
 
     /**
@@ -46,6 +55,10 @@ export class EnumDefinition extends ASTNodeWithChildren<EnumValue> {
      */
     get vMembers(): EnumValue[] {
         return this.ownChildren as EnumValue[];
+    }
+
+    get children(): readonly ASTNode[] {
+        return this.pickNodes(this.documentation, this.vMembers);
     }
 
     /**

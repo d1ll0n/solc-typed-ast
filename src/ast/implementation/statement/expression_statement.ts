@@ -7,6 +7,8 @@ import { Statement } from "./statement";
  * An expression, that is specified on a statement level.
  */
 export class ExpressionStatement extends Statement {
+    readonly type = "ExpressionStatement";
+
     /**
      * A contained expression, e.g. `foo(1);` or `x = 1 + 1;`
      */

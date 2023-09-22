@@ -2,6 +2,8 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class IndexRangeAccess extends Expression {
+    readonly type = "IndexRangeAccess";
+
     /**
      * The expression that is accessed e.g. `data` in `data[2:4]`
      */

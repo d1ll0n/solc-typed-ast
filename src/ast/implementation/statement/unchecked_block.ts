@@ -9,6 +9,8 @@ import { Statement, StatementWithChildren } from "./statement";
 export class UncheckedBlock extends StatementWithChildren<
     Statement | StatementWithChildren<ASTNode> | StructuredDocumentation
 > {
+    readonly type = "UncheckedBlock";
+
     constructor(
         id: number,
         src: string,

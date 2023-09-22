@@ -2,6 +2,8 @@ import { ASTNodeWithChildren } from "../../ast_node";
 import { VariableDeclaration } from "../declaration/variable_declaration";
 
 export class ParameterList extends ASTNodeWithChildren<VariableDeclaration> {
+    readonly type = "ParameterList";
+
     constructor(id: number, src: string, parameters: Iterable<VariableDeclaration>, raw?: any) {
         super(id, src, raw);
 

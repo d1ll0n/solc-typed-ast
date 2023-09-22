@@ -2,6 +2,8 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class BinaryOperation extends Expression {
+    readonly type = "BinaryOperation";
+
     /**
      * String representation of the operator, e.g. `+` in `1 + 2`
      */

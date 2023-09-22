@@ -7,6 +7,8 @@ import { StructuredDocumentation } from "../meta/structured_documentation";
 import { ContractDefinition } from "./contract_definition";
 
 export class ErrorDefinition extends ASTNode {
+    readonly type = "ErrorDefinition";
+
     /**
      * The name of the error
      */

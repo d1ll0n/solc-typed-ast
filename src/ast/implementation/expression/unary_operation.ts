@@ -2,6 +2,8 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class UnaryOperation extends Expression {
+    readonly type = "UnaryOperation";
+
     /**
      * Indicates that operator is used as prefix `++x` (`true`)
      * or suffix `x++` (`false`)

@@ -1,6 +1,24 @@
 import { ASTNode, ASTNodeWithChildren } from "./ast_node";
 import { StructuredDocumentation } from "./implementation/meta";
 
+export function extractDocumentationText(docBlock: string): string {
+    const result: string[] = [];
+
+    const replacers = docBlock.startsWith("///") ? ["/// ", "///"] : ["/**", "*/", "* ", "*"];
+    const lines = docBlock.split("\n");
+
+    for (let line of lines) {
+        line = line.trimStart();
+
+        for (const replacer of replacers) {
+            line = line.replace(replacer, "");
+        }
+        result.push(line);
+    }
+
+    return result.join("\n").trim();
+}
+
 export interface WithPrecedingDocs {
     documentation?: string | StructuredDocumentation;
 
@@ -21,8 +39,8 @@ export interface WithDanglingDocs {
     danglingDocString?: string;
 }
 
-export function getDocumentation(
-    node: WithPrecedingDocs & ASTNodeWithChildren<ASTNode>
+export function getDocumentation<T extends ASTNode = ASTNode>(
+    node: WithPrecedingDocs & ASTNodeWithChildren<T>
 ): string | StructuredDocumentation | undefined {
     if (node.docString !== undefined) {
         return node.docString;
@@ -50,8 +68,8 @@ export function getDocumentation(
     return undefined;
 }
 
-export function setDocumentation(
-    node: WithPrecedingDocs & ASTNodeWithChildren<ASTNode>,
+export function setDocumentation<T extends ASTNode = ASTNode>(
+    node: WithPrecedingDocs & ASTNodeWithChildren<T>,
     value: string | StructuredDocumentation | undefined
 ): void {
     const old = node.documentation;
@@ -61,22 +79,22 @@ export function setDocumentation(
 
         if (old instanceof StructuredDocumentation) {
             if (value !== old) {
-                node.replaceChild(value, old);
+                node.replaceChild(value as any, old as any);
             }
         } else {
-            node.insertAtBeginning(value);
+            node.insertAtBeginning(value as any);
         }
     } else {
         if (old instanceof StructuredDocumentation) {
-            node.removeChild(old);
+            node.removeChild(old as any);
         }
 
         node.docString = value;
     }
 }
 
-export function getDanglingDocumentation(
-    node: WithDanglingDocs & ASTNodeWithChildren<ASTNode>
+export function getDanglingDocumentation<T extends ASTNode = ASTNode>(
+    node: WithDanglingDocs & ASTNodeWithChildren<T>
 ): string | StructuredDocumentation | undefined {
     if (node.danglingDocString !== undefined) {
         return node.danglingDocString;
@@ -104,8 +122,8 @@ export function getDanglingDocumentation(
     return undefined;
 }
 
-export function setDanglingDocumentation(
-    node: WithDanglingDocs & ASTNodeWithChildren<ASTNode>,
+export function setDanglingDocumentation<T extends ASTNode = ASTNode>(
+    node: WithDanglingDocs & ASTNodeWithChildren<T>,
     value: string | StructuredDocumentation | undefined
 ): void {
     const old = node.danglingDocumentation;

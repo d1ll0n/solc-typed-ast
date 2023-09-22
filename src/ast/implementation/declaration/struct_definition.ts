@@ -1,10 +1,16 @@
 import { getFQDefName } from "../../..";
-import { ASTNodeWithChildren } from "../../ast_node";
+import { ASTNode, ASTNodeWithChildren } from "../../ast_node";
 import { SourceUnit } from "../meta/source_unit";
 import { ContractDefinition } from "./contract_definition";
 import { VariableDeclaration } from "./variable_declaration";
-
+import { StructuredDocumentation } from "../meta/structured_documentation";
 export class StructDefinition extends ASTNodeWithChildren<VariableDeclaration> {
+    readonly type = "StructDefinition";
+
+    // docString?: string;
+
+    documentation?: string | StructuredDocumentation;
+
     /**
      * The name of the struct
      */
@@ -32,6 +38,7 @@ export class StructDefinition extends ASTNodeWithChildren<VariableDeclaration> {
         scope: number,
         visibility: string,
         members: Iterable<VariableDeclaration>,
+        documentation?: string | StructuredDocumentation,
         nameLocation?: string,
         raw?: any
     ) {
@@ -41,10 +48,11 @@ export class StructDefinition extends ASTNodeWithChildren<VariableDeclaration> {
         this.scope = scope;
         this.visibility = visibility;
         this.nameLocation = nameLocation;
-
         for (const member of members) {
             this.appendChild(member);
         }
+        this.documentation = documentation;
+        this.acceptChildren();
     }
 
     /**
@@ -59,6 +67,10 @@ export class StructDefinition extends ASTNodeWithChildren<VariableDeclaration> {
      */
     get vMembers(): VariableDeclaration[] {
         return this.ownChildren as VariableDeclaration[];
+    }
+
+    get children(): readonly ASTNode[] {
+        return this.pickNodes(this.documentation, this.vMembers);
     }
 
     /**

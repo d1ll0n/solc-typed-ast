@@ -1,3 +1,5 @@
 import { Statement } from "./statement";
 
-export class PlaceholderStatement extends Statement {}
+export class PlaceholderStatement extends Statement {
+    readonly type = "PlaceholderStatement";
+}
