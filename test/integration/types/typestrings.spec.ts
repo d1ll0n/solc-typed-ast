@@ -15,19 +15,17 @@ import {
     eq,
     Expression,
     FunctionTypeName,
+    generalizeType,
     Identifier,
+    InferType,
+    MappingType,
     ModifierInvocation,
+    PointerType,
     PossibleCompilerKinds,
+    specializeType,
     VariableDeclaration
 } from "../../../src";
-import {
-    generalizeType,
-    getNodeType,
-    MappingType,
-    PointerType,
-    specializeType,
-    variableDeclarationToTypeNode
-} from "../../../src/types";
+import { getNodeType } from "../../utils/typeStrings/typeString_parser";
 
 const samples: Array<[string, string, ASTKind]> = [
     [
@@ -129,11 +127,14 @@ describe("Round-trip tests for typestring parser/printer", () => {
                 );
 
                 expect(result.compilerVersion).toEqual(compilerVersion);
+
                 const errors = detectCompileErrors(result.data);
 
                 expect(errors).toHaveLength(0);
 
                 const data = result.data;
+
+                const inference = new InferType(compilerVersion);
 
                 const reader = new ASTReader();
                 const sourceUnits = reader.read(data, astKind);
@@ -155,7 +156,7 @@ describe("Round-trip tests for typestring parser/printer", () => {
                             continue;
                         }
 
-                        const typeNode = getNodeType(typedASTNode, compilerVersion);
+                        const typeNode = getNodeType(typedASTNode, inference);
 
                         // Edge case: We don't fully model type strings for external function type names.
                         // External function type strings contain the funtion name as well, which we ignore
@@ -198,7 +199,7 @@ describe("Round-trip tests for typestring parser/printer", () => {
                             typedASTNode.vReferencedDeclaration instanceof VariableDeclaration &&
                             typedASTNode.vReferencedDeclaration.vType !== undefined
                         ) {
-                            const compType2 = variableDeclarationToTypeNode(
+                            const compType2 = inference.variableDeclarationToTypeNode(
                                 typedASTNode.vReferencedDeclaration
                             );
 

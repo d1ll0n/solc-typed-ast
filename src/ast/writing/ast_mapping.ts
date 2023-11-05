@@ -102,6 +102,16 @@ function descTrimRight(desc: SrcDesc): void {
     }
 }
 
+function hasSpdxLicence(desc: SrcDesc): boolean {
+    const first = desc[0];
+
+    if (typeof first === "string") {
+        return first.includes("SPDX-License-Identifier");
+    }
+
+    return hasSpdxLicence(first[1]);
+}
+
 /**
  * A small hack to handle semicolons in the last statement of compound statements like if and while. Given:
  *
@@ -1011,32 +1021,46 @@ class StructDefinitionWriter extends ASTNodeWriter {
         return ["struct ", node.name, " ", ...this.getBody(node, writer)];
     }
 
+    writeWhole(node: StructDefinition, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
+    }
+
     private getBody(node: StructDefinition, writer: ASTWriter): SrcDesc {
-        if (node.vMembers.length === 0) {
+        if (node.children.length === 0) {
             return ["{}"];
         }
 
         const formatter = writer.formatter;
         const wrap = formatter.renderWrap();
-        const currentIndent = formatter.renderIndent();
 
         formatter.increaseNesting();
 
-        const nestedIndent = formatter.renderIndent();
-
-        formatter.decreaseNesting();
-
-        return [
+        const result: SrcDesc = [
             "{",
             wrap,
             ...flatJoin(
-                node.vMembers.map((vDecl) => [nestedIndent, ...writer.desc(vDecl), ";"]),
+                node.vMembers.map((vDecl) => [
+                    formatter.renderIndent(),
+                    ...writer.desc(vDecl),
+                    ";"
+                ]),
                 wrap
             ),
-            wrap,
-            currentIndent,
-            "}"
+            wrap
         ];
+
+        if (node.danglingDocumentation) {
+            result.push(formatter.renderIndent(), ...writer.desc(node.danglingDocumentation), wrap);
+        }
+
+        formatter.decreaseNesting();
+
+        result.push(formatter.renderIndent(), "}");
+
+        return result;
     }
 }
 
@@ -1172,7 +1196,13 @@ class UsingForDirectiveWriter extends ASTNodeWriter {
         if (node.vLibraryName) {
             result.push(node.vLibraryName);
         } else if (node.vFunctionList) {
-            result.push("{ ", ...join(node.vFunctionList, ", "), " }");
+            const entries = node.vFunctionList.map((entry) =>
+                entry instanceof IdentifierPath
+                    ? [entry]
+                    : [entry.definition, " as ", entry.operator]
+            );
+
+            result.push("{ ", ...flatJoin(entries, ", "), " }");
         }
 
         result.push(" for ", node.vTypeName ? node.vTypeName : "*");
@@ -1195,7 +1225,45 @@ class EnumValueWriter extends ASTNodeWriter {
 
 class EnumDefinitionWriter extends ASTNodeWriter {
     writeInner(node: EnumDefinition, writer: ASTWriter): SrcDesc {
-        return writer.desc("enum ", node.name, " ", "{ ", ...join(node.vMembers, ", "), " }");
+        return ["enum ", node.name, " ", ...this.getBody(node, writer)];
+    }
+
+    writeWhole(node: EnumDefinition, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
+    }
+
+    private getBody(node: EnumDefinition, writer: ASTWriter): SrcDesc {
+        if (node.children.length === 0) {
+            return ["{}"];
+        }
+
+        const formatter = writer.formatter;
+        const wrap = formatter.renderWrap();
+
+        formatter.increaseNesting();
+
+        const result: SrcDesc = [
+            "{",
+            wrap,
+            ...flatJoin(
+                node.vMembers.map((vDecl) => [formatter.renderIndent(), ...writer.desc(vDecl)]),
+                "," + wrap
+            ),
+            wrap
+        ];
+
+        if (node.danglingDocumentation) {
+            result.push(formatter.renderIndent(), ...writer.desc(node.danglingDocumentation), wrap);
+        }
+
+        formatter.decreaseNesting();
+
+        result.push(formatter.renderIndent(), "}");
+
+        return result;
     }
 }
 
@@ -1405,6 +1473,16 @@ class SourceUnitWriter extends ASTNodeWriter {
         }
 
         descTrimRight(result);
+
+        if (node.license && !hasSpdxLicence(result)) {
+            result.unshift(
+                StructuredDocumentationWriter.render(
+                    "SPDX-License-Identifier: " + node.license,
+                    writer.formatter
+                ),
+                wrap
+            );
+        }
 
         return result;
     }

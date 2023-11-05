@@ -1,6 +1,5 @@
-import { ABIEncoderVersion } from "../../../types/abi";
 import { ASTNode, ASTNodeWithChildren } from "../../ast_node";
-import { ContractKind, StateVariableVisibility } from "../../constants";
+import { ContractKind } from "../../constants";
 import {
     getDanglingDocumentation,
     getDocumentation,
@@ -74,6 +73,11 @@ export class ContractDefinition
      */
     usedErrors: number[];
 
+    /**
+     * Used error definition ids (including external definition ids)
+     */
+    usedEvents: number[];
+
     constructor(
         id: number,
         src: string,
@@ -84,6 +88,7 @@ export class ContractDefinition
         fullyImplemented: boolean,
         linearizedBaseContracts: number[],
         usedErrors: number[],
+        usedEvents: number[],
         documentation?: string | StructuredDocumentation,
         children?: Iterable<ASTNode>,
         nameLocation?: string,
@@ -98,6 +103,7 @@ export class ContractDefinition
         this.fullyImplemented = fullyImplemented;
         this.linearizedBaseContracts = linearizedBaseContracts;
         this.usedErrors = usedErrors;
+        this.usedEvents = usedEvents;
 
         if (children) {
             for (const node of children) {
@@ -170,6 +176,15 @@ export class ContractDefinition
         const context = this.requiredContext;
 
         return this.usedErrors.map((id) => context.locate(id)) as ErrorDefinition[];
+    }
+
+    /**
+     * Used event definitions (including external definitions)
+     */
+    get vUsedEvents(): readonly EventDefinition[] {
+        const context = this.requiredContext;
+
+        return this.usedEvents.map((id) => context.locate(id)) as EventDefinition[];
     }
 
     /**
@@ -269,37 +284,6 @@ export class ContractDefinition
      */
     get vConstructor(): FunctionDefinition | undefined {
         return this.vFunctions.find((fn) => fn.isConstructor);
-    }
-
-    interfaceId(encoderVersion: ABIEncoderVersion): string | undefined {
-        if (
-            this.kind === ContractKind.Interface ||
-            (this.kind === ContractKind.Contract && this.abstract)
-        ) {
-            const selectors: string[] = [];
-
-            for (const fn of this.vFunctions) {
-                const hash = fn.canonicalSignatureHash(encoderVersion);
-
-                if (hash) {
-                    selectors.push(hash);
-                }
-            }
-
-            for (const v of this.vStateVariables) {
-                if (v.visibility === StateVariableVisibility.Public) {
-                    selectors.push(v.getterCanonicalSignatureHash(encoderVersion));
-                }
-            }
-
-            return selectors
-                .map((selector) => BigInt("0x" + selector))
-                .reduce((a, b) => a ^ b, 0n)
-                .toString(16)
-                .padStart(8, "0");
-        }
-
-        return undefined;
     }
 
     /**

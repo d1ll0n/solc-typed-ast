@@ -41,6 +41,7 @@ import {
     BuiltinFunctionType,
     BuiltinStructType,
     BuiltinType,
+    castable,
     ErrorType,
     EventType,
     FunctionLikeSetType,
@@ -51,19 +52,18 @@ import {
     IntLiteralType,
     IntType,
     isVisiblityExternallyCallable,
-    ModuleType,
     PackedArrayType,
-    parse,
     PointerType,
     RationalLiteralType,
     StringLiteralType,
-    SyntaxError,
+    SuperType,
     TupleType,
     TypeNameType,
     TypeNode,
     UserDefinedType
 } from "../../../src/types";
-import { SuperType } from "../../../src/types/ast/super";
+import { ModuleType } from "../../utils/typeStrings/ast/module_type";
+import { parse, PeggySyntaxError } from "../../utils/typeStrings/typeString_parser";
 
 export const samples: string[] = [
     "./test/samples/solidity/compile_04.sol",
@@ -138,10 +138,13 @@ export const samples: string[] = [
     "test/samples/solidity/builtins_0426.sol",
     "test/samples/solidity/builtins_0426.sol",
     "test/samples/solidity/builtins_0816.sol",
+    "test/samples/solidity/different_abi_encoders/v1_imports_v2/v1.sol",
+    "test/samples/solidity/different_abi_encoders/v2_imports_v1/v2.sol",
     "test/samples/solidity/type_inference/sample00.sol",
     "test/samples/solidity/type_inference/sample01.sol",
     "test/samples/solidity/type_inference/sample02.sol",
-    "test/samples/solidity/type_inference/sample03.sol"
+    "test/samples/solidity/type_inference/sample03.sol",
+    "test/samples/solidity/user_defined_operators_0819.sol"
 ];
 
 function toSoliditySource(expr: Expression, compilerVersion: string) {
@@ -150,7 +153,15 @@ function toSoliditySource(expr: Expression, compilerVersion: string) {
     return writer.write(expr);
 }
 
-function externalParamEq(a: TypeNode, b: TypeNode): boolean {
+function externalParamEq(a: TypeNode | null, b: TypeNode | null): boolean {
+    if (a === null && b === null) {
+        return true;
+    }
+
+    if (a === null || b === null) {
+        return false;
+    }
+
     if (a instanceof PointerType && b instanceof PointerType) {
         if (
             !(
@@ -215,11 +226,17 @@ function exprIsABIDecodeArg(expr: Expression): boolean {
 }
 
 function stripSingleTuples(t: TypeNode): TypeNode {
-    while (t instanceof TupleType && t.elements.length === 1) {
-        t = t.elements[0];
+    let res = t;
+
+    while (res instanceof TupleType && res.elements.length === 1) {
+        const elT = res.elements[0];
+
+        assert(elT !== null, "Unexpected tuple with single empty element: {0}", t);
+
+        res = elT;
     }
 
-    return t;
+    return res;
 }
 
 /**
@@ -406,8 +423,7 @@ function compareTypeNodes(
     }
 
     /// For imports we use the slightly richer ImportRefType while
-    /// the string parser returns the simpler ModuleType. ModuleType should
-    /// be considered deprecated
+    /// the string parser returns the simpler ModuleType.
     if (
         inferredT instanceof ImportRefType &&
         parsedT instanceof ModuleType &&
@@ -493,8 +509,8 @@ function compareTypeNodes(
         for (let i = 0; i < parsedT.elements.length; i++) {
             if (
                 !compareTypeNodes(
-                    generalizeType(inferredT.elements[i])[0],
-                    generalizeType(parsedT.elements[i])[0],
+                    generalizeType(inferredT.elements[i] as TypeNode)[0],
+                    generalizeType(parsedT.elements[i] as TypeNode)[0],
                     expr,
                     version
                 )
@@ -526,7 +542,8 @@ function compareTypeNodes(
     if (
         inferredT instanceof FunctionType &&
         parsedT instanceof FunctionType &&
-        inferredT.visibility === FunctionVisibility.External &&
+        (inferredT.visibility === FunctionVisibility.External ||
+            parsedT.visibility === FunctionVisibility.External) &&
         inferredT.parameters.length === parsedT.parameters.length &&
         inferredT.parameters.length === parsedT.parameters.length
     ) {
@@ -636,7 +653,7 @@ function compareTypeNodes(
     return eq(inferredT, parsedT);
 }
 
-export const ENV_CUSTOM_PATH = "SOLC_TEST_SAMPLES_PATH";
+const ENV_CUSTOM_PATH = "SOLC_TEST_SAMPLES_PATH";
 
 describe("Type inference for expressions", () => {
     const path = process.env[ENV_CUSTOM_PATH];
@@ -649,7 +666,7 @@ describe("Type inference for expressions", () => {
             : samples;
 
     for (const sample of sampleList) {
-        it(`${sample}`, async () => {
+        it(sample, async () => {
             let result: CompileResult;
             let compilerVersion: string | undefined;
             let data: any;
@@ -691,22 +708,20 @@ describe("Type inference for expressions", () => {
 
             expect(errors).toHaveLength(0);
 
-            assert(compilerVersion !== undefined, "Expected compiler version to be set to precise");
+            assert(compilerVersion !== undefined, "Expected compiler version to be defined");
 
-            const astKind = lt(compilerVersion as string, "0.5.0")
-                ? ASTKind.Legacy
-                : ASTKind.Modern;
+            const astKind = lt(compilerVersion, "0.5.0") ? ASTKind.Legacy : ASTKind.Modern;
+
+            const inference = new InferType(compilerVersion);
 
             const reader = new ASTReader();
             const sourceUnits = reader.read(data, astKind);
-
-            const infer = new InferType(compilerVersion);
 
             for (const unit of sourceUnits) {
                 for (const expr of unit.getChildrenBySelector<Expression>(
                     (child) => child instanceof Expression
                 )) {
-                    const inferredType = infer.typeOf(expr);
+                    const inferredType = inference.typeOf(expr);
 
                     // typeStrings for Identifiers in ImportDirectives may be undefined.
                     if (expr.typeString === undefined) {
@@ -733,10 +748,10 @@ describe("Type inference for expressions", () => {
                     try {
                         parsedType = parse(expr.typeString, {
                             ctx: expr,
-                            version: compilerVersion
+                            inference
                         });
                     } catch (e) {
-                        if (e instanceof SyntaxError) {
+                        if (e instanceof PeggySyntaxError) {
                             // Failed parsing. Skip
                             continue;
                         }
@@ -753,6 +768,37 @@ describe("Type inference for expressions", () => {
                         expr,
                         toSoliditySource(expr, compilerVersion)
                     );
+                }
+            }
+
+            // Test typeOfCallee
+            for (const unit of sourceUnits) {
+                for (const expr of unit.getChildrenBySelector<FunctionCall>(
+                    (child) => child instanceof FunctionCall
+                )) {
+                    if (expr.kind !== FunctionCallKind.FunctionCall) {
+                        continue;
+                    }
+
+                    const calleeT = inference.typeOfCallee(expr);
+
+                    expect(calleeT).toBeDefined();
+                    assert(calleeT !== undefined, "Expected callee type to be defined");
+
+                    const hasImplicitArg =
+                        calleeT instanceof FunctionType && calleeT.implicitFirstArg;
+
+                    const formalArgTs = hasImplicitArg
+                        ? calleeT.parameters.slice(1)
+                        : calleeT.parameters;
+
+                    expect(formalArgTs.length === expr.vArguments.length).toBeTruthy();
+
+                    for (let i = 0; i < formalArgTs.length; i++) {
+                        const actualT = inference.typeOf(expr.vArguments[i]);
+
+                        expect(castable(actualT, formalArgTs[i], compilerVersion)).toBeTruthy();
+                    }
                 }
             }
         });

@@ -20,6 +20,7 @@ import {
     FunctionDefinition,
     Identifier,
     IdentifierPath,
+    InferType,
     resolveAny,
     SourceUnit,
     StateVariableVisibility,
@@ -106,6 +107,8 @@ describe("resolveAny() correctly resolves all Identifiers/UserDefinedTypeNames/F
             const sourceUnits = reader.read(result.data, astKind);
 
             for (const unit of sourceUnits) {
+                const inference = new InferType(compilerVersion);
+
                 for (const node of unit.getChildrenBySelector(
                     (child) =>
                         child instanceof Identifier ||
@@ -174,7 +177,7 @@ describe("resolveAny() correctly resolves all Identifiers/UserDefinedTypeNames/F
                     }
 
                     const expectedID = def.id;
-                    const resolved = [...resolveAny(name, ctx, compilerVersion)];
+                    const resolved = [...resolveAny(name, ctx, inference)];
 
                     expect(resolved.length).toBeGreaterThanOrEqual(1);
 
@@ -438,7 +441,9 @@ describe("resolveAny() unit tests", () => {
                 for (const [name, expectedIds, testName] of unitTests) {
                     it(testName, () => {
                         const ctxNode = reader.context.locate(ctxId);
-                        const resolvedNodes = resolveAny(name, ctxNode, compilerVersion);
+                        const inference = new InferType(compilerVersion);
+
+                        const resolvedNodes = resolveAny(name, ctxNode, inference);
 
                         expect(new Set(expectedIds)).toEqual(
                             new Set([...resolvedNodes].map((node) => node.id))
@@ -451,7 +456,9 @@ describe("resolveAny() unit tests", () => {
 });
 
 describe("resolveAny() correctly handles visibility", async () => {
+    const compilerVersion = "0.8.13";
     const reader = new ASTReader();
+
     const sample = `contract Base {
     uint private privX;
     uint internal intX;
@@ -479,10 +486,15 @@ contract Child is Base {
 }`;
     let unit: SourceUnit;
     let foo: ASTNode;
+    let inference: InferType;
 
     before(async () => {
-        const compResult = await compileSourceString("sample.sol", sample, "0.8.13");
+        const compResult = await compileSourceString("sample.sol", sample, compilerVersion);
+
         [unit] = reader.read(compResult.data);
+
+        inference = new InferType(compilerVersion);
+
         foo = unit.getChildrenBySelector(
             (nd) => nd instanceof FunctionDefinition && nd.name === "foo"
         )[0];
@@ -500,7 +512,7 @@ contract Child is Base {
         ];
 
         for (const [name, expCount] of tests) {
-            const res = resolveAny(name, foo, "0.8.13");
+            const res = resolveAny(name, foo, inference);
             expect(res.size).toEqual(expCount);
         }
     });
@@ -517,7 +529,7 @@ contract Child is Base {
         ];
 
         for (const [name, expCount] of tests) {
-            const res = resolveAny(name, foo, "0.8.13", false, true);
+            const res = resolveAny(name, foo, inference, false, true);
             expect(res.size).toEqual(expCount);
         }
     });

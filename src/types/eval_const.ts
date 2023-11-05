@@ -2,18 +2,23 @@ import Decimal from "decimal.js";
 import {
     BinaryOperation,
     Conditional,
+    ElementaryTypeNameExpression,
+    EtherUnit,
     Expression,
     FunctionCall,
     FunctionCallKind,
     Identifier,
     Literal,
     LiteralKind,
+    TimeUnit,
     TupleExpression,
     UnaryOperation,
     VariableDeclaration
 } from "../ast";
-import { pp } from "../misc";
-import { binaryOperatorGroups, subdenominationMultipliers } from "./infer";
+import { assert, pp } from "../misc";
+import { IntType, NumericLiteralType } from "./ast";
+import { InferType } from "./infer";
+import { BINARY_OPERATOR_GROUPS, SUBDENOMINATION_MULTIPLIERS, clampIntToType } from "./utils";
 /**
  * Tune up precision of decimal values to follow Solidity behavior.
  * Be careful with precision - setting it to large values causes NodeJS to crash.
@@ -25,27 +30,39 @@ Decimal.set({ precision: 100 });
 export type Value = Decimal | boolean | string | bigint;
 
 export class EvalError extends Error {
-    expr: Expression;
+    expr?: Expression;
 
-    constructor(e: Expression, msg: string) {
+    constructor(msg: string, expr?: Expression) {
         super(msg);
 
-        this.expr = e;
+        this.expr = expr;
     }
 }
 
 export class NonConstantExpressionError extends EvalError {
-    constructor(e: Expression) {
-        super(e, `Found non-constant expression ${pp(e)} during constant evaluation`);
+    constructor(expr: Expression) {
+        super(`Found non-constant expression ${pp(expr)} during constant evaluation`, expr);
     }
 }
 
+function str(value: Value): string {
+    return value instanceof Decimal ? value.toString() : pp(value);
+}
+
 function promoteToDec(v: Value): Decimal {
-    if (!(typeof v === "bigint" || v instanceof Decimal)) {
-        throw new Error(`Expected number not ${v}`);
+    if (v instanceof Decimal) {
+        return v;
     }
 
-    return v instanceof Decimal ? v : new Decimal(v.toString());
+    if (typeof v === "bigint") {
+        return new Decimal(v.toString());
+    }
+
+    if (typeof v === "string") {
+        return new Decimal(v === "" ? 0 : "0x" + Buffer.from(v, "utf-8").toString("hex"));
+    }
+
+    throw new Error(`Expected number not ${v}`);
 }
 
 function demoteFromDec(d: Decimal): Decimal | bigint {
@@ -115,298 +132,354 @@ export function isConstant(expr: Expression): boolean {
     return false;
 }
 
-function evalLiteral(expr: Literal): Value {
-    if (expr.kind === LiteralKind.Bool) {
-        return expr.value === "true";
+export function evalLiteralImpl(
+    kind: LiteralKind,
+    value: string,
+    subdenomination?: TimeUnit | EtherUnit
+): Value {
+    if (kind === LiteralKind.Bool) {
+        return value === "true";
     }
 
-    if (expr.kind === LiteralKind.String || expr.kind === LiteralKind.UnicodeString) {
-        return expr.value;
+    if (kind === LiteralKind.HexString) {
+        return value === "" ? 0n : BigInt("0x" + value);
     }
 
-    if (expr.kind === LiteralKind.HexString) {
-        return expr.hexValue;
+    if (kind === LiteralKind.String || kind === LiteralKind.UnicodeString) {
+        return value;
     }
 
-    if (expr.kind === LiteralKind.Number) {
-        const dec = new Decimal(expr.value.replaceAll("_", ""));
+    if (kind === LiteralKind.Number) {
+        const dec = new Decimal(value.replaceAll("_", ""));
         const val = dec.isInteger() ? BigInt(dec.toFixed()) : dec;
 
-        if (expr.subdenomination !== undefined) {
-            if (subdenominationMultipliers[expr.subdenomination] === undefined) {
-                throw new EvalError(expr, `Unknown denomination ${expr.subdenomination}`);
+        if (subdenomination) {
+            const multiplier = SUBDENOMINATION_MULTIPLIERS.get(subdenomination);
+
+            if (multiplier === undefined) {
+                throw new EvalError(`Unknown denomination ${subdenomination}`);
             }
 
             if (val instanceof Decimal) {
-                return demoteFromDec(val.times(subdenominationMultipliers[expr.subdenomination]));
+                return demoteFromDec(val.times(multiplier));
             }
 
-            return val * BigInt(subdenominationMultipliers[expr.subdenomination].toFixed());
+            return val * BigInt(multiplier.toFixed());
         }
 
         return val;
     }
 
-    throw new EvalError(expr, `Unsupported literal kind "${expr.kind}"`);
+    throw new EvalError(`Unsupported literal kind "${kind}"`);
 }
 
-function evalUnary(expr: UnaryOperation): Value {
-    const subVal = evalConstantExpr(expr.vSubExpression);
+export function evalUnaryImpl(operator: string, value: Value): Value {
+    if (operator === "!") {
+        if (typeof value === "boolean") {
+            return !value;
+        }
 
-    if (expr.operator === "!") {
-        if (!(typeof subVal === "boolean")) {
+        throw new EvalError(`Expected ${str(value)} to be boolean`);
+    }
+
+    if (operator === "~") {
+        if (typeof value === "bigint") {
+            return ~value;
+        }
+
+        throw new EvalError(`Expected ${str(value)} to be a bigint`);
+    }
+
+    if (operator === "+") {
+        if (value instanceof Decimal || typeof value === "bigint") {
+            return value;
+        }
+
+        throw new EvalError(`Expected ${str(value)} to be a bigint or a decimal`);
+    }
+
+    if (operator === "-") {
+        if (value instanceof Decimal) {
+            return value.negated();
+        }
+
+        if (typeof value === "bigint") {
+            return -value;
+        }
+
+        throw new EvalError(`Expected ${str(value)} to be a bigint or a decimal`);
+    }
+
+    throw new EvalError(`Unable to process ${operator}${str(value)}`);
+}
+
+export function evalBinaryImpl(operator: string, left: Value, right: Value): Value {
+    if (BINARY_OPERATOR_GROUPS.Logical.includes(operator)) {
+        if (!(typeof left === "boolean" && typeof right === "boolean")) {
+            throw new EvalError(`${operator} expects booleans not ${str(left)} and ${str(right)}`);
+        }
+
+        if (operator === "&&") {
+            return left && right;
+        }
+
+        if (operator === "||") {
+            return left || right;
+        }
+
+        throw new EvalError(`Unknown logical operator ${operator}`);
+    }
+
+    if (BINARY_OPERATOR_GROUPS.Equality.includes(operator)) {
+        if (typeof left === "string" && typeof right === "string") {
             throw new EvalError(
-                expr.vSubExpression,
-                `Expected a boolean in ${pp(expr.vSubExpression)} not ${subVal}`
+                `${operator} not allowed for strings ${str(left)} and ${str(right)}`
             );
         }
 
-        return !subVal;
-    }
+        let isEqual: boolean;
 
-    if (expr.operator === "~") {
-        if (typeof subVal === "bigint") {
-            return ~subVal;
+        if (typeof left === "boolean" || typeof right === "boolean") {
+            isEqual = left === right;
+        } else {
+            const leftDec = promoteToDec(left);
+            const rightDec = promoteToDec(right);
+
+            isEqual = leftDec.equals(rightDec);
         }
 
-        throw new EvalError(
-            expr.vSubExpression,
-            `Expected an integer number in ${pp(expr.vSubExpression)} not ${subVal}`
+        if (operator === "==") {
+            return isEqual;
+        }
+
+        if (operator === "!=") {
+            return !isEqual;
+        }
+
+        throw new EvalError(`Unknown equality operator ${operator}`);
+    }
+
+    if (BINARY_OPERATOR_GROUPS.Comparison.includes(operator)) {
+        if (typeof left === "string" && typeof right === "string") {
+            throw new EvalError(
+                `${operator} not allowed for strings ${str(left)} and ${str(right)}`
+            );
+        }
+
+        const leftDec = promoteToDec(left);
+        const rightDec = promoteToDec(right);
+
+        if (operator === "<") {
+            return leftDec.lessThan(rightDec);
+        }
+
+        if (operator === "<=") {
+            return leftDec.lessThanOrEqualTo(rightDec);
+        }
+
+        if (operator === ">") {
+            return leftDec.greaterThan(rightDec);
+        }
+
+        if (operator === ">=") {
+            return leftDec.greaterThanOrEqualTo(rightDec);
+        }
+
+        throw new EvalError(`Unknown comparison operator ${operator}`);
+    }
+
+    if (BINARY_OPERATOR_GROUPS.Arithmetic.includes(operator)) {
+        const leftDec = promoteToDec(left);
+        const rightDec = promoteToDec(right);
+
+        let res: Decimal;
+
+        if (operator === "+") {
+            res = leftDec.plus(rightDec);
+        } else if (operator === "-") {
+            res = leftDec.minus(rightDec);
+        } else if (operator === "*") {
+            res = leftDec.times(rightDec);
+        } else if (operator === "/") {
+            res = leftDec.div(rightDec);
+        } else if (operator === "%") {
+            res = leftDec.modulo(rightDec);
+        } else if (operator === "**") {
+            res = leftDec.pow(rightDec);
+        } else {
+            throw new EvalError(`Unknown arithmetic operator ${operator}`);
+        }
+
+        return demoteFromDec(res);
+    }
+
+    if (BINARY_OPERATOR_GROUPS.Bitwise.includes(operator)) {
+        if (!(typeof left === "bigint" && typeof right === "bigint")) {
+            throw new EvalError(`${operator} expects integers not ${str(left)} and ${str(right)}`);
+        }
+
+        if (operator === "<<") {
+            return left << right;
+        }
+
+        if (operator === ">>") {
+            return left >> right;
+        }
+
+        if (operator === "|") {
+            return left | right;
+        }
+
+        if (operator === "&") {
+            return left & right;
+        }
+
+        if (operator === "^") {
+            return left ^ right;
+        }
+
+        throw new EvalError(`Unknown bitwise operator ${operator}`);
+    }
+
+    throw new EvalError(`Unable to process ${str(left)} ${operator} ${str(right)}`);
+}
+
+export function evalLiteral(node: Literal): Value {
+    try {
+        return evalLiteralImpl(
+            node.kind,
+            node.kind === LiteralKind.HexString ? node.hexValue : node.value,
+            node.subdenomination
         );
-    }
-
-    if (expr.operator === "+") {
-        if (subVal instanceof Decimal || typeof subVal === "bigint") {
-            return subVal;
+    } catch (e: unknown) {
+        if (e instanceof EvalError) {
+            e.expr = node;
         }
 
-        throw new EvalError(
-            expr.vSubExpression,
-            `Expected a number in ${pp(expr.vSubExpression)} not ${subVal}`
+        throw e;
+    }
+}
+
+export function evalUnary(node: UnaryOperation, inference: InferType): Value {
+    try {
+        const subT = inference.typeOf(node.vSubExpression);
+        const res = evalUnaryImpl(node.operator, evalConstantExpr(node.vSubExpression, inference));
+
+        if (subT instanceof IntType && typeof res === "bigint") {
+            return clampIntToType(res, subT);
+        }
+
+        return res;
+    } catch (e: unknown) {
+        if (e instanceof EvalError && e.expr === undefined) {
+            e.expr = node;
+        }
+
+        throw e;
+    }
+}
+
+export function evalBinary(node: BinaryOperation, inference: InferType): Value {
+    try {
+        const leftT = inference.typeOf(node.vLeftExpression);
+        const rightT = inference.typeOf(node.vRightExpression);
+
+        const res = evalBinaryImpl(
+            node.operator,
+            evalConstantExpr(node.vLeftExpression, inference),
+            evalConstantExpr(node.vRightExpression, inference)
         );
-    }
 
-    if (expr.operator === "-") {
-        if (subVal instanceof Decimal) {
-            return subVal.negated();
+        if (!(leftT instanceof NumericLiteralType && rightT instanceof NumericLiteralType)) {
+            const resT = inference.typeOfBinaryOperation(node);
+
+            if (resT instanceof IntType && typeof res === "bigint") {
+                return clampIntToType(res, resT);
+            }
         }
 
-        if (typeof subVal === "bigint") {
-            return -subVal;
+        return res;
+    } catch (e: unknown) {
+        if (e instanceof EvalError && e.expr === undefined) {
+            e.expr = node;
         }
 
-        throw new EvalError(
-            expr.vSubExpression,
-            `Expected a number in ${pp(expr.vSubExpression)} not ${subVal}`
-        );
+        throw e;
     }
-
-    throw new EvalError(expr, `NYI unary operator ${expr.operator}`);
 }
 
-function evalBinaryLogic(expr: BinaryOperation, lVal: Value, rVal: Value): Value {
-    const op = expr.operator;
+export function evalFunctionCall(node: FunctionCall, inference: InferType): Value {
+    assert(
+        node.kind === FunctionCallKind.TypeConversion,
+        'Expected constant call to be a "{0}", but got "{1}" instead',
+        FunctionCallKind.TypeConversion,
+        node.kind
+    );
 
-    if (!(typeof lVal === "boolean" && typeof lVal === "boolean")) {
-        throw new EvalError(expr, `${op} expects booleans not ${lVal} and ${rVal}`);
+    const val = evalConstantExpr(node.vArguments[0], inference);
+
+    if (typeof val === "bigint" && node.vExpression instanceof ElementaryTypeNameExpression) {
+        const castT = inference.typeOfElementaryTypeNameExpression(node.vExpression);
+        const toT = castT.type;
+
+        if (toT instanceof IntType) {
+            return clampIntToType(val, toT);
+        }
     }
 
-    if (op === "&&") {
-        return lVal && rVal;
-    }
-
-    if (op === "||") {
-        return lVal || rVal;
-    }
-
-    throw new Error(`Unknown logic op ${op}`);
-}
-
-function evalBinaryEquality(expr: BinaryOperation, lVal: Value, rVal: Value): Value {
-    let equal: boolean;
-
-    if (typeof lVal === "string" || typeof rVal === "string") {
-        throw new EvalError(expr, `Comparison not allowed for strings ${lVal} and ${rVal}`);
-    }
-
-    if (lVal instanceof Decimal && rVal instanceof Decimal) {
-        equal = lVal.equals(rVal);
-    } else {
-        equal = lVal === rVal;
-    }
-
-    if (expr.operator === "==") {
-        return equal;
-    }
-
-    if (expr.operator === "!=") {
-        return !equal;
-    }
-
-    throw new EvalError(expr, `Unknown equality op ${expr.operator}`);
-}
-
-function evalBinaryComparison(expr: BinaryOperation, lVal: Value, rVal: Value): Value {
-    const op = expr.operator;
-
-    const lDec = promoteToDec(lVal);
-    const rDec = promoteToDec(rVal);
-
-    if (op === "<") {
-        return lDec.lessThan(rDec);
-    }
-
-    if (op === "<=") {
-        return lDec.lessThanOrEqualTo(rDec);
-    }
-
-    if (op === ">") {
-        return lDec.greaterThan(rDec);
-    }
-
-    if (op === ">=") {
-        return lDec.greaterThanOrEqualTo(rDec);
-    }
-
-    throw new EvalError(expr, `Unknown comparison op ${expr.operator}`);
-}
-
-function evalBinaryArithmetic(expr: BinaryOperation, lVal: Value, rVal: Value): Value {
-    const op = expr.operator;
-
-    const lDec = promoteToDec(lVal);
-    const rDec = promoteToDec(rVal);
-
-    let res: Decimal;
-
-    if (op === "+") {
-        res = lDec.plus(rDec);
-    } else if (op === "-") {
-        res = lDec.minus(rDec);
-    } else if (op === "*") {
-        res = lDec.times(rDec);
-    } else if (op === "/") {
-        res = lDec.div(rDec);
-    } else if (op === "%") {
-        res = lDec.modulo(rDec);
-    } else if (op === "**") {
-        res = lDec.pow(rDec);
-    } else {
-        throw new EvalError(expr, `Unknown arithmetic op ${expr.operator}`);
-    }
-
-    return demoteFromDec(res);
-}
-
-function evalBinaryBitwise(expr: BinaryOperation, lVal: Value, rVal: Value): Value {
-    const op = expr.operator;
-
-    if (!(typeof lVal === "bigint" && typeof rVal === "bigint")) {
-        throw new EvalError(expr, `${op} expects integers not ${lVal} and ${rVal}`);
-    }
-
-    if (op === "<<") {
-        return lVal << rVal;
-    }
-
-    if (op === ">>") {
-        return lVal >> rVal;
-    }
-
-    if (op === "|") {
-        return lVal | rVal;
-    }
-
-    if (op === "&") {
-        return lVal & rVal;
-    }
-
-    if (op === "^") {
-        return lVal ^ rVal;
-    }
-
-    throw new EvalError(expr, `Unknown bitwise op ${expr.operator}`);
-}
-
-function evalBinary(expr: BinaryOperation): Value {
-    const lVal = evalConstantExpr(expr.vLeftExpression);
-    const rVal = evalConstantExpr(expr.vRightExpression);
-
-    if (binaryOperatorGroups.Logical.includes(expr.operator)) {
-        return evalBinaryLogic(expr, lVal, rVal);
-    }
-
-    if (binaryOperatorGroups.Equality.includes(expr.operator)) {
-        return evalBinaryEquality(expr, lVal, rVal);
-    }
-
-    if (binaryOperatorGroups.Comparison.includes(expr.operator)) {
-        return evalBinaryComparison(expr, lVal, rVal);
-    }
-
-    if (binaryOperatorGroups.Arithmetic.includes(expr.operator)) {
-        return evalBinaryArithmetic(expr, lVal, rVal);
-    }
-
-    if (binaryOperatorGroups.Bitwise.includes(expr.operator)) {
-        return evalBinaryBitwise(expr, lVal, rVal);
-    }
-
-    throw new EvalError(expr, `Unknown binary op ${expr.operator}`);
+    return val;
 }
 
 /**
  * Given a constant expression `expr` evaluate it to a concrete `Value`.
  * If `expr` is not constant throw `NonConstantExpressionError`.
  *
- * TODO: The order of some operations changed in some version.
- * So perhaps to be fully precise here we will need a compiler version too?
+ * @todo The order of some operations changed in some version.
+ * Current implementation does not yet take it into an account.
  */
-export function evalConstantExpr(expr: Expression): Value {
-    if (!isConstant(expr)) {
-        throw new NonConstantExpressionError(expr);
+export function evalConstantExpr(node: Expression, inference: InferType): Value {
+    if (!isConstant(node)) {
+        throw new NonConstantExpressionError(node);
     }
 
-    if (expr instanceof Literal) {
-        return evalLiteral(expr);
+    if (node instanceof Literal) {
+        return evalLiteral(node);
     }
 
-    if (expr instanceof UnaryOperation) {
-        return evalUnary(expr);
+    if (node instanceof UnaryOperation) {
+        return evalUnary(node, inference);
     }
 
-    if (expr instanceof BinaryOperation) {
-        return evalBinary(expr);
+    if (node instanceof BinaryOperation) {
+        return evalBinary(node, inference);
     }
 
-    if (expr instanceof TupleExpression) {
-        return evalConstantExpr(expr.vOriginalComponents[0] as Expression);
+    if (node instanceof TupleExpression) {
+        return evalConstantExpr(node.vOriginalComponents[0] as Expression, inference);
     }
 
-    if (expr instanceof Conditional) {
-        return evalConstantExpr(expr.vCondition)
-            ? evalConstantExpr(expr.vTrueExpression)
-            : evalConstantExpr(expr.vFalseExpression);
+    if (node instanceof Conditional) {
+        return evalConstantExpr(node.vCondition, inference)
+            ? evalConstantExpr(node.vTrueExpression, inference)
+            : evalConstantExpr(node.vFalseExpression, inference);
     }
 
-    if (expr instanceof Identifier) {
-        const decl = expr.vReferencedDeclaration;
+    if (node instanceof Identifier) {
+        const decl = node.vReferencedDeclaration;
 
         if (decl instanceof VariableDeclaration) {
-            return evalConstantExpr(decl.vValue as Expression);
+            return evalConstantExpr(decl.vValue as Expression, inference);
         }
     }
 
-    if (expr instanceof FunctionCall) {
-        /**
-         * @todo Implement properly, as Solidity permits overflow and underflow
-         * during constant evaluation.
-         */
-        return evalConstantExpr(expr.vArguments[0]);
+    if (node instanceof FunctionCall) {
+        return evalFunctionCall(node, inference);
     }
 
-    /// Note that from the point of view of the type system constant conditionals and
-    /// indexing in constant array literals are not considered constant expressions.
-    /// So for now we don't support them, but we may change that in the future.
-    throw new EvalError(expr, `Unable to evaluate constant expression ${pp(expr)}`);
+    /**
+     * Note that from the point of view of the type system constant conditionals and
+     * indexing in constant array literals are not considered constant expressions.
+     * So for now we don't support them, but we may change that in the future.
+     */
+    throw new EvalError(`Unable to evaluate constant expression ${pp(node)}`, node);
 }

@@ -3,7 +3,7 @@ import { Command } from "commander";
 import fse from "fs-extra";
 import {
     ASTKind,
-    ASTNodeCallback,
+    ASTNode,
     ASTNodeFormatter,
     ASTReader,
     ASTWriter,
@@ -19,13 +19,15 @@ import {
     compileSourceString,
     ContractDefinition,
     DefaultASTWriterMapping,
+    downloadSupportedCompilers,
     ErrorDefinition,
     EventDefinition,
     FunctionDefinition,
     FunctionVisibility,
-    getABIEncoderVersion,
+    InferType,
     isExact,
     LatestCompilerVersion,
+    PathOptions,
     PossibleCompilerKinds,
     PrettyFormatter,
     SourceUnit,
@@ -33,7 +35,6 @@ import {
     VariableDeclaration,
     XPath
 } from "..";
-import { PathOptions } from "../compile";
 
 enum CompileMode {
     Auto = "auto",
@@ -80,7 +81,7 @@ function error(message: string): never {
         .option("--stdin", "Read input from STDIN instead of files.")
         .option(
             "--mode <mode>",
-            `One of the following input modes: ${CompileMode.Sol} (Solidity source), ${CompileMode.Json} (JSON compiler artifact), ${CompileMode.Auto} (try to detect by file extension)`,
+            `One of the following input modes: "${CompileMode.Sol}" (Solidity source), "${CompileMode.Json}" (JSON compiler artifact), "${CompileMode.Auto}" (try to detect by file extension)`,
             CompileMode.Auto
         )
         .option(
@@ -90,7 +91,7 @@ function error(message: string): never {
         )
         .option(
             "--compiler-kind <compilerKind>",
-            `Type of Solidity compiler to use. Currently supported values are ${CompilerKind.WASM} and ${CompilerKind.Native}.`,
+            `Type of Solidity compiler to use. Currently supported values are "${CompilerKind.WASM}" or "${CompilerKind.Native}".`,
             CompilerKind.WASM
         )
         .option("--path-remapping <pathRemapping>", "Path remapping input for Solc.")
@@ -118,7 +119,11 @@ function error(message: string): never {
         )
         .option(
             "--locate-compiler-cache",
-            "Print location of cache directory, that is used to store downloaded compilers."
+            "Print location of current compiler cache directory (used to store downloaded compilers)."
+        )
+        .option(
+            "--download-compilers <compilerKind...>",
+            `Download specified kind of supported compilers to compiler cache. Supports multiple entries.`
         );
 
     program.parse(process.argv);
@@ -139,6 +144,30 @@ function error(message: string): never {
 
     if (options.locateCompilerCache) {
         terminate(CACHE_DIR);
+    }
+
+    if (options.downloadCompilers) {
+        const compilerKinds = options.downloadCompilers.map((kind: string): CompilerKind => {
+            if (PossibleCompilerKinds.has(kind)) {
+                return kind as CompilerKind;
+            }
+
+            error(
+                `Invalid compiler kind "${kind}". Possible values: ${[
+                    ...PossibleCompilerKinds.values()
+                ].join(", ")}.`
+            );
+        });
+
+        console.log(
+            `Downloading compilers (${compilerKinds.join(", ")}) to current compiler cache:`
+        );
+
+        for await (const compiler of downloadSupportedCompilers(compilerKinds)) {
+            console.log(`${compiler.path} (${compiler.constructor.name} v${compiler.version})`);
+        }
+
+        terminate();
     }
 
     if (options.help || (!args.length && !options.stdin)) {
@@ -314,11 +343,7 @@ function error(message: string): never {
     if (options.tree) {
         const INDENT = "|   ";
 
-        const encoderVersion = result.compilerVersion
-            ? getABIEncoderVersion(units, result.compilerVersion as string)
-            : undefined;
-
-        const walker: ASTNodeCallback = (node) => {
+        const writer = (inference: InferType, node: ASTNode) => {
             const level = node.getParents().length;
             const indent = INDENT.repeat(level);
 
@@ -329,7 +354,7 @@ function error(message: string): never {
             } else if (node instanceof ContractDefinition) {
                 message += " -> " + node.kind + " " + node.name;
 
-                const interfaceId = encoderVersion ? node.interfaceId(encoderVersion) : undefined;
+                const interfaceId = inference.interfaceId(node);
 
                 if (interfaceId) {
                     message += ` [id: ${interfaceId}]`;
@@ -338,35 +363,29 @@ function error(message: string): never {
                 const signature =
                     node.vScope instanceof ContractDefinition &&
                     (node.visibility === FunctionVisibility.Public ||
-                        node.visibility === FunctionVisibility.External) &&
-                    encoderVersion
-                        ? node.canonicalSignature(encoderVersion)
+                        node.visibility === FunctionVisibility.External)
+                        ? inference.signature(node)
                         : undefined;
 
-                if (signature && encoderVersion) {
-                    const selector = node.canonicalSignatureHash(encoderVersion);
+                if (signature) {
+                    const selector = inference.signatureHash(node);
 
                     message += ` -> ${signature} [selector: ${selector}]`;
                 } else {
                     message += ` -> ${node.kind}`;
                 }
             } else if (node instanceof ErrorDefinition || node instanceof EventDefinition) {
-                if (encoderVersion) {
-                    const signature = node.canonicalSignature(encoderVersion);
-                    const selector = node.canonicalSignatureHash(encoderVersion);
+                const signature = inference.signature(node);
+                const selector = inference.signatureHash(node);
 
-                    message += ` -> ${signature} [selector: ${selector}]`;
-                }
+                message += ` -> ${signature} [selector: ${selector}]`;
             } else if (node instanceof VariableDeclaration) {
                 if (node.stateVariable) {
                     message += ` -> ${node.typeString} ${node.visibility} ${node.name}`;
 
-                    if (
-                        node.visibility === StateVariableVisibility.Public &&
-                        encoderVersion !== undefined
-                    ) {
-                        const signature = node.getterCanonicalSignature(encoderVersion);
-                        const selector = node.getterCanonicalSignatureHash(encoderVersion);
+                    if (node.visibility === StateVariableVisibility.Public) {
+                        const signature = inference.signature(node);
+                        const selector = inference.signatureHash(node);
 
                         message += ` [getter: ${signature}, selector: ${selector}]`;
                     }
@@ -381,8 +400,11 @@ function error(message: string): never {
             console.log(indent + message);
         };
 
+        const compilerVersion = result.compilerVersion || LatestCompilerVersion;
+        const inference = new InferType(compilerVersion);
+
         for (const unit of units) {
-            unit.walk(walker);
+            unit.walk(writer.bind(undefined, inference));
 
             console.log();
         }
