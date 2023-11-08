@@ -1,6 +1,8 @@
-import { TypeName } from "./type_name";
+import { BaseTypeName } from "./type_name";
 
-export class ElementaryTypeName extends TypeName {
+export class ElementaryTypeName extends BaseTypeName {
+    readonly type = "ElementaryTypeName";
+
     /**
      * Name of the type
      */

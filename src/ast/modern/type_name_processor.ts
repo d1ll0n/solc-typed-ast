@@ -1,5 +1,5 @@
 import { ASTReader, ASTReaderConfiguration } from "../ast_reader";
-import { TypeName, TypeNameConstructor } from "../implementation/type/type_name";
+import { TypeName, TypeNameConstructor } from "../implementation/type";
 import { ModernNodeProcessor } from "./node_processor";
 
 export class ModernTypeNameProcessor<T extends TypeName> extends ModernNodeProcessor<T> {

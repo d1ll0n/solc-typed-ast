@@ -11,7 +11,7 @@ contract StmtDocs04 {
         Y,
         Z
         /// Enum
-        /// 
+///        /// 
         /// Dangling
         /// Docstring
     }
@@ -23,7 +23,7 @@ contract StmtDocs04 {
     struct StructABC {
         uint a;
         /// Struct
-        /// 
+///        /// 
         /// Dangling
         /// Docstring
     }

@@ -1,9 +1,11 @@
 import { ASTNode } from "../../ast_node";
 import { FunctionStateMutability, FunctionVisibility } from "../../constants";
 import { ParameterList } from "../meta/parameter_list";
-import { TypeName } from "./type_name";
+import { BaseTypeName } from "./type_name";
 
-export class FunctionTypeName extends TypeName {
+export class FunctionTypeName extends BaseTypeName {
+    readonly type = "FunctionTypeName";
+
     /**
      * Function visibility, for example: `public`, `internal`, `private` or `external`.
      */

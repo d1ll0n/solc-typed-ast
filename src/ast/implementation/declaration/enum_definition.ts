@@ -13,6 +13,7 @@ import { ContractDefinition } from "./contract_definition";
 import { EnumValue } from "./enum_value";
 
 export class EnumDefinition extends ASTNodeWithChildren<EnumValue> {
+    readonly type = "EnumDefinition";
     docString?: string;
     danglingDocString?: string;
 

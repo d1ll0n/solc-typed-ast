@@ -48,6 +48,7 @@ import {
     VariableDeclarationStatement,
     encodeEventSignature,
     encodeFuncSignature,
+    isTypeName,
     resolveAny
 } from "../ast";
 import { DataLocation, ExternalReferenceType } from "../ast/constants";
@@ -121,6 +122,12 @@ const unaryImpureOperators = ["++", "--"];
 const RX_ADDRESS = /^address *(payable)?$/;
 const RX_INTEGER = /^(u?)int([0-9]*)$/;
 const RX_FIXED_BYTES = /^bytes([0-9]+)$/;
+
+export const yulBinaryBuiltinGroups = {
+    Arithmetic: ["add", "sub", "div", "sdiv", "exp", "mul", "mod", "smod", "signextend"],
+    Bitwise: ["and", "or", "xor", "sar", "shl", "shr", "byte"],
+    Comparison: ["gt", "lt", "sgt", "slt", "eq"]
+};
 
 /**
  * Some builtins have types that are not easy to express with our current hacky polymorphic support.
@@ -1712,7 +1719,7 @@ export class InferType {
     typeOfElementaryTypeNameExpression(node: ElementaryTypeNameExpression): TypeNameType {
         let innerT: TypeNode;
 
-        if (node.typeName instanceof TypeName) {
+        if (node.typeName instanceof ASTNode && isTypeName(node.typeName)) {
             innerT = this.typeNameToTypeNode(node.typeName);
         } else {
             const elementaryT = InferType.elementaryTypeNameStringToTypeNode(node.typeName);
@@ -2292,7 +2299,7 @@ export class InferType {
             return new MappingType(keyT, valueT);
         }
 
-        throw new Error(`NYI converting AST type ${node.print()} to TypeNode`);
+        throw new Error(`NYI converting AST type ${node} to TypeNode`);
     }
 
     /**

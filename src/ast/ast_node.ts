@@ -73,12 +73,7 @@ export class ASTNode {
         }
     }
 
-    /**
-     * Type of the AST node
-     */
-    get type(): string {
-        return this.constructor.name;
-    }
+    readonly type: string = "";
 
     /**
      * Returns current node AST context. Throws an error if no context is set.

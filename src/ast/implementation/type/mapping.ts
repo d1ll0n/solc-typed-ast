@@ -1,7 +1,20 @@
+import { BaseTypeName } from "./type_name";
 import { ASTNode } from "../../ast_node";
-import { TypeName } from "./type_name";
+import { UserDefinedTypeName } from "./user_defined_type_name";
+import { FunctionTypeName } from "./function_type_name";
+import { ElementaryTypeName } from "./elementary_type_name";
+import { ArrayTypeName } from "./array_type_name";
 
-export class Mapping extends TypeName {
+type TypeName =
+    | ArrayTypeName
+    | ElementaryTypeName
+    | FunctionTypeName
+    | Mapping
+    | UserDefinedTypeName;
+
+export class Mapping extends BaseTypeName {
+    readonly type = "Mapping";
+
     /**
      * A mapping key type: any built-in **value** type,
      * including `bytes`, `string`, contract and enum types.

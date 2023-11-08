@@ -1,8 +1,21 @@
 import { ASTNode } from "../../ast_node";
 import { Expression } from "../expression/expression";
-import { TypeName } from "./type_name";
+import { ElementaryTypeName } from "./elementary_type_name";
+import { FunctionTypeName } from "./function_type_name";
+import { BaseTypeName } from "./type_name";
+import { Mapping } from "./mapping";
+import { UserDefinedTypeName } from "./user_defined_type_name";
 
-export class ArrayTypeName extends TypeName {
+type TypeName =
+    | ArrayTypeName
+    | ElementaryTypeName
+    | FunctionTypeName
+    | Mapping
+    | UserDefinedTypeName;
+
+export class ArrayTypeName extends BaseTypeName {
+    readonly type = "ArrayTypeName";
+
     /**
      * Type of array elements
      */

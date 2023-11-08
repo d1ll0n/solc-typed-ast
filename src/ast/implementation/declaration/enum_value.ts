@@ -1,6 +1,7 @@
 import { ASTNode } from "../../ast_node";
 
 export class EnumValue extends ASTNode {
+	readonly type = "EnumValue";
     /**
      * Member value
      */

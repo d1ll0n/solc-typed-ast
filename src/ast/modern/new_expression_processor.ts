@@ -1,6 +1,6 @@
 import { ASTReader, ASTReaderConfiguration } from "../ast_reader";
 import { NewExpression } from "../implementation/expression/new_expression";
-import { TypeName } from "../implementation/type/type_name";
+import { TypeName } from "../implementation/type";
 import { ModernExpressionProcessor } from "./expression_processor";
 
 export class ModernNewExpressionProcessor extends ModernExpressionProcessor<NewExpression> {

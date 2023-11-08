@@ -1,5 +1,5 @@
 import { ASTNode } from "../../ast_node";
-import { TypeName } from "../type/type_name";
+import { TypeName } from "../type";
 import { UserDefinedTypeName } from "../type/user_defined_type_name";
 import { IdentifierPath } from "./identifier_path";
 
@@ -9,6 +9,7 @@ export interface UsingCustomizedOperator {
 }
 
 export class UsingForDirective extends ASTNode {
+    readonly type = "UsingForDirective";
     /**
      * A library type name or identifier.
      * One of vLibraryName or vFunctionList should always be set.

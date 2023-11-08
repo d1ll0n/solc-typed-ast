@@ -19,16 +19,16 @@ struct GlobalStruct {
     mapping(Empty => bool) d;
 }
 
-///  Sample library
-///  Contains testSignedBaseExponentiation()
+/// Sample library
+/// Contains testSignedBaseExponentiation()
 library SampleLibrary {
     function testSignedBaseExponentiation(int base, uint pow) public returns (int) {
         return (base ** pow);
     }
 }
 
-///  Sample interface
-///  Contains infFunc() that returns `bytes memory`
+/// Sample interface
+/// Contains infFunc() that returns `bytes memory`
 interface SampleInterface {
     function infFunc(string calldata x) external returns (bytes memory);
 }
@@ -36,18 +36,18 @@ interface SampleInterface {
 abstract contract SampleAbstract {
     int internal some;
 
-    ///  An abtract overridable modifier
+    /// An abtract overridable modifier
     modifier abstractMod(int a) virtual;
 
     constructor(int v) public {
         some = v;
     }
 
-    function abstractFunc(address a) virtual internal returns (address payable);
+    function abstractFunc(address a) internal virtual returns (address payable);
 }
 
 /// Empty contract
-///  Just a stub
+/// Just a stub
 contract Empty {}
 
 contract EmptyPayable {
@@ -63,14 +63,14 @@ contract SampleBase is SampleAbstract(1) {
     uint public immutable immutableVar2;
     uint[] internal data;
 
-    ///  An implementation of the abstract modifier
+    /// An implementation of the abstract modifier
     modifier abstractMod(int a) override {
         _;
         some += a;
     }
 
-    ///  Modifier that requires `some` to be positive
-    ///  before the function execution.
+    /// Modifier that requires `some` to be positive
+    /// before the function execution.
     modifier onlyPositiveSomeBefore() {
         require(some > 0, "Failure");
         _;
@@ -85,7 +85,7 @@ contract SampleBase is SampleAbstract(1) {
         immutableVar2 = v;
     }
 
-    function abstractFunc(address a) override internal returns (address payable) {
+    function abstractFunc(address a) internal override returns (address payable) {
         return payable(a);
     }
 
@@ -118,7 +118,7 @@ contract SampleBase is SampleAbstract(1) {
         } catch {
             int b = 2;
         }
-        try new EmptyPayable{salt: 0x0, value: 1 ether}() returns (EmptyPayable x) {
+        try new EmptyPayable{ salt: 0x0, value: 1 ether }() returns (EmptyPayable x) {
             int a = 1;
         } catch Error(string memory reason) {} catch (bytes memory lowLevelData) {}
     }
@@ -128,7 +128,7 @@ contract SampleBase is SampleAbstract(1) {
         assert(1 gwei == 0.001 szabo);
     }
 
-    function basicFunctionality() internal onlyPositiveSomeBefore() returns (uint) {
+    function basicFunctionality() internal onlyPositiveSomeBefore returns (uint) {
         function(address) internal returns (address payable) converter = SampleBase.abstractFunc;
         function() internal pure sel = SampleBase.internalCallback;
         uint[] memory nums = new uint[](3);
@@ -194,6 +194,6 @@ interface SomeInterface {
 }
 
 contract PublicVarOverride is SomeInterface {
-    ///  State variable overriding interface function by getter.
+    /// State variable overriding interface function by getter.
     address payable public immutable override addr = address(0x0);
 }

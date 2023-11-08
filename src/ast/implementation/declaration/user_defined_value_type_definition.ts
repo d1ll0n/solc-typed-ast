@@ -5,6 +5,7 @@ import { ElementaryTypeName } from "../type/elementary_type_name";
 import { ContractDefinition } from "./contract_definition";
 
 export class UserDefinedValueTypeDefinition extends ASTNode {
+	readonly type = "UserDefinedValueTypeDefinition";
     /**
      * The name of the user-defined value type definition
      */

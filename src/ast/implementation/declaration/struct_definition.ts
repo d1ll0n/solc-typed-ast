@@ -12,6 +12,7 @@ import { ContractDefinition } from "./contract_definition";
 import { VariableDeclaration } from "./variable_declaration";
 
 export class StructDefinition extends ASTNodeWithChildren<VariableDeclaration> {
+    readonly type = "StructDefinition";
     docString?: string;
     danglingDocString?: string;
 

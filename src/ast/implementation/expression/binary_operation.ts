@@ -3,6 +3,7 @@ import { FunctionDefinition } from "../declaration";
 import { Expression } from "./expression";
 
 export class BinaryOperation extends Expression {
+	readonly type = "BinaryOperation";
     /**
      * String representation of the operator, e.g. `+` in `1 + 2`
      */

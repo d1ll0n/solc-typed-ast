@@ -2,6 +2,7 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class Conditional extends Expression {
+	readonly type = "Conditional";
     /**
      * The condition expression, e.g. `a > b` in `a > b ? (a + 1) : (b + 1)`.
      */

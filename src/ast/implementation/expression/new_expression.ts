@@ -1,8 +1,9 @@
 import { ASTNode } from "../../ast_node";
-import { TypeName } from "../type/type_name";
+import { TypeName } from "../type";
 import { Expression } from "./expression";
 
 export class NewExpression extends Expression {
+    readonly type = "NewExpression";
     /**
      * Type name of the new value
      */

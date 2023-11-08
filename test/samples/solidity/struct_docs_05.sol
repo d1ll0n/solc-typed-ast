@@ -4,7 +4,7 @@ contract StmtDocs04 {
     event Ev(uint a);
 
     /// Struct
-        /// Docstring
+    /// Docstring
     struct StructABC {
         uint a;
 
@@ -15,9 +15,11 @@ contract StmtDocs04 {
     }
 
     /// Enum
-        /// Docstring
+    /// Docstring
     enum EnumXYZ {
-        X, Y, Z
+        X,
+        Y,
+        Z
 
         /// Enum
 
@@ -30,9 +32,9 @@ contract StmtDocs04 {
         _; /// Modifier dangling docstring
     }
 
-    function stmtStructDocs() modStructDocs() public {
+    function stmtStructDocs() public modStructDocs {
         /// VariableDeclarationStatement docstring
-        (uint a) = (1);
+        uint a = (1);
 
         /// ExpressionStatement docstring
         1;
@@ -46,49 +48,50 @@ contract StmtDocs04 {
         emit Ev(1);
 
         /// WhileStatement docstring
-        while(false)
-        /// Body Block docstring
+        while (false) /// Body Block docstring
         {
             /// Continue docstring
             continue;
         }
 
         /// DoWhileStatement docstring
-        do
-        /// Body Block docstring
+        do /// Body Block docstring
         {
             /// Break docstring
             break;
 
             /// Do-While
-            ///  Dangling
-            ///   Docstring
-        }
-        while(true);
+            /// Dangling
+            /// Docstring
+        } while (true);
 
         /// ForStatement docstring
         for (
             /// Init VariableDeclarationStatement docstring
-            (uint n) = (1);
+            uint n = (1);
             /// Expression docstring
             n < 1;
             /// Post-loop ExpressionStatement docstring
             n++
-        ) 
-        /// Body Block docstring
-        {}
+        ) /// Body Block docstring
+        {
+
+        }
 
         /// IfStatement docstring
-        if (false)
-        /// True body Block docstring
-        { /// True body dangling docstring
+        if (false) /// True body Block docstring
+        {
+            /// True body dangling docstring
         }
-        else
         /// False body Block docstring
-        { /**False body dangling docstring*/ }
+        else {
+            /**False body dangling docstring*/
+        }
 
         /// InlineAssembly docstring
-        assembly {}
+        assembly {
+
+        }
 
         /// Return docstring
         return;

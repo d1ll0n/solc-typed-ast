@@ -1,5 +1,5 @@
 import { ASTNode } from "../ast_node";
-import { ASTContext, ASTNodePostprocessor } from "../ast_reader";
+import { ASTNodePostprocessor, ASTReader, ASTReaderConfiguration } from "../ast_reader";
 import {
     ContractDefinition,
     EnumDefinition,
@@ -222,7 +222,12 @@ export class StructuredDocumentationReconstructingPostprocessor
 {
     private reconstructor = new StructuredDocumentationReconstructor();
 
-    process(node: SupportedNode, context: ASTContext, sources?: Map<string, string>): void {
+    process(
+        node: SupportedNode,
+        reader: ASTReader,
+        _: ASTReaderConfiguration,
+        sources?: Map<string, string>
+    ): void {
         if (sources === undefined) {
             return;
         }
@@ -243,9 +248,9 @@ export class StructuredDocumentationReconstructingPostprocessor
             const preceding = this.reconstructor.fragmentCoordsToStructDoc(precedingGap, source);
 
             if (preceding) {
-                preceding.id = context.lastId + 1;
+                preceding.id = reader.context.lastId + 1;
 
-                context.register(preceding);
+                reader.context.register(preceding);
 
                 node.documentation = preceding;
 
@@ -268,9 +273,9 @@ export class StructuredDocumentationReconstructingPostprocessor
             const dangling = this.reconstructor.fragmentCoordsToStructDoc(danglingGap, source);
 
             if (dangling) {
-                dangling.id = context.lastId + 1;
+                dangling.id = reader.context.lastId + 1;
 
-                context.register(dangling);
+                reader.context.register(dangling);
 
                 node.danglingDocumentation = dangling;
 

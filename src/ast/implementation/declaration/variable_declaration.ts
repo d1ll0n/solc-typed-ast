@@ -3,9 +3,10 @@ import { DataLocation, Mutability, StateVariableVisibility } from "../../constan
 import { Expression } from "../expression/expression";
 import { OverrideSpecifier } from "../meta/override_specifier";
 import { StructuredDocumentation } from "../meta/structured_documentation";
-import { TypeName } from "../type/type_name";
+import { TypeName } from "../type";
 
 export class VariableDeclaration extends ASTNode {
+    readonly type = "VariableDeclaration";
     /**
      * Set if the variable can not be assigned a new value after declaration
      */

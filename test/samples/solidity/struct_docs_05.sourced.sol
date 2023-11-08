@@ -11,7 +11,7 @@ contract StmtDocs04 {
         Y,
         Z
         /// Enum
-        /// 
+        ///
         /// Dangling
         /// Docstring
     }
@@ -23,7 +23,7 @@ contract StmtDocs04 {
     struct StructABC {
         uint a;
         /// Struct
-        /// 
+        ///
         /// Dangling
         /// Docstring
     }
@@ -34,7 +34,7 @@ contract StmtDocs04 {
         /// Modifier dangling docstring
     }
 
-    function stmtStructDocs() public modStructDocs() {
+    function stmtStructDocs() public modStructDocs {
         /// VariableDeclarationStatement docstring
         uint a = (1);
         /// ExpressionStatement docstring
@@ -46,8 +46,9 @@ contract StmtDocs04 {
         /// EmitStatement docstring
         emit Ev(1);
         /// WhileStatement docstring
-        while (false) /// Body Block docstring
-        {
+        while (
+            false /// Body Block docstring
+        ) {
             /// Continue docstring
             continue;
         }
@@ -56,30 +57,35 @@ contract StmtDocs04 {
             /// Break docstring
             break;
             /// Do-While
-            ///  Dangling
-            ///   Docstring
-        } while(true);
+            /// Dangling
+            /// Docstring
+        } while (true);
         /// ForStatement docstring
-        for (/// Init VariableDeclarationStatement docstring
-        uint n = (1); n < 1; /// Post-loop ExpressionStatement docstring
-        n++) /// Body Block docstring
-        {}
+        for (
+            /// Init VariableDeclarationStatement docstring
+            uint n = (1);
+            n < 1; /// Post-loop ExpressionStatement docstring
+            n++ /// Body Block docstring
+        ) {}
         /// IfStatement docstring
         if (false) /// True body Block docstring
         {
             /// True body dangling docstring
-        } else /// False body Block docstring
-        {
+        }
+        /// False body Block docstring
+        else {
             /// False body dangling docstring
         }
         /// InlineAssembly docstring
-        assembly { }
+        assembly {
+
+        }
         /// Return docstring
         return;
         /// Function body docstring
     }
     /// Contract
-    /// 
+    ///
     /// Dangling
     /// Docstring
 }

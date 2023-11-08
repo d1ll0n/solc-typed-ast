@@ -1,5 +1,5 @@
 import { ASTReader, ASTReaderConfiguration } from "../ast_reader";
-import { TypeName, TypeNameConstructor } from "../implementation/type/type_name";
+import { TypeName, TypeNameConstructor } from "../implementation/type";
 import { LegacyNodeProcessor } from "./node_processor";
 
 export class LegacyTypeNameProcessor<T extends TypeName> extends LegacyNodeProcessor<T> {

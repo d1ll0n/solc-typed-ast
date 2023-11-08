@@ -1,6 +1,6 @@
 import { ASTReader, ASTReaderConfiguration } from "../ast_reader";
 import { UsingForDirective } from "../implementation/meta/using_for_directive";
-import { TypeName } from "../implementation/type/type_name";
+import { TypeName } from "../implementation/type";
 import { UserDefinedTypeName } from "../implementation/type/user_defined_type_name";
 import { LegacyNodeProcessor } from "./node_processor";
 

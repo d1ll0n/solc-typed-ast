@@ -92,15 +92,15 @@ function computeSourceUnitName(
     return applyRemappings(remappings, imported);
 }
 
-async function resolveSourceUnitName(
+function resolveSourceUnitName(
     sourceUnitName: string,
     resolvers: ImportResolver[]
-): Promise<[string, string] | undefined> {
+): [string, string] | undefined {
     for (const resolver of resolvers) {
         const resolvedPath = resolver.resolve(sourceUnitName);
 
         if (resolvedPath !== undefined) {
-            const contents = await fse.readFile(resolvedPath, "utf-8");
+            const contents = fse.readFileSync(resolvedPath, "utf-8");
 
             return [contents, resolvedPath];
         }
@@ -116,13 +116,13 @@ async function resolveSourceUnitName(
  * **missing** in `files` and add them into the `files` map. Also for each imported file
  * add a mapping from its source unit name to the actual file name in `fileNames`.
  */
-export async function findAllFiles(
+export function findAllFiles(
     files: Map<string, string>,
     fileNames: Map<string, string>,
     remappings: Remapping[],
     resolvers: ImportResolver[],
     visited = new Set<string>()
-): Promise<void> {
+): void {
     /**
      * Queue of source unit names to process
      */
@@ -146,7 +146,7 @@ export async function findAllFiles(
          * Missing contents - try and fill them in from the resolvers
          */
         if (content === undefined) {
-            const result = await resolveSourceUnitName(sourceUnitName, resolvers);
+            const result = resolveSourceUnitName(sourceUnitName, resolvers);
 
             if (result === undefined) {
                 throw new CompileInferenceError(`Couldn't find ${sourceUnitName}`);

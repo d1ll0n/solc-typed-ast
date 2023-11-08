@@ -14,7 +14,12 @@ export interface ASTNodeProcessor<T extends ASTNode> {
 }
 
 export interface ASTNodePostprocessor<T extends ASTNode> {
-    process(node: T, context: ASTContext, sources?: Map<string, string>): void;
+    process(
+        node: T,
+        reader: ASTReader,
+        config: ASTReaderConfiguration,
+        sources?: Map<string, string>
+    ): void;
     isSupportedNode(node: ASTNode): node is T;
 }
 
@@ -44,6 +49,7 @@ export class ASTContext {
      * ID to distinct different contexts
      */
     id = contextIdSequence.next().value;
+    lastId: number = -1;
 
     /**
      * Map from ID number to the `AST` node with same ID in tree
@@ -54,20 +60,24 @@ export class ASTContext {
         this.register(...nodes);
     }
 
-    /**
-     * Max ID of the registered nodes
-     */
-    get lastId(): number {
-        let last = 0;
-
-        for (const id of this.map.keys()) {
-            if (id > last) {
-                last = id;
-            }
-        }
-
-        return last;
+    get nextId(): number {
+        return ++this.lastId;
     }
+
+    // /**
+    //  * Max ID of the registered nodes
+    //  */
+    // get lastId(): number {
+    //     let last = 0;
+
+    //     for (const id of this.map.keys()) {
+    //         if (id > last) {
+    //             last = id;
+    //         }
+    //     }
+
+    //     return last;
+    // }
 
     get nodes(): Iterable<ASTNode> {
         return this.map.values();
@@ -84,6 +94,9 @@ export class ASTContext {
             }
 
             this.map.set(node.id, node);
+            if (node.id > this.lastId) {
+                this.lastId = node.id;
+            }
 
             node.context = this;
         }
@@ -134,18 +147,23 @@ export class ASTPostprocessor {
     }
 
     processNode(node: ASTNode, context: ASTContext, sources?: Map<string, string>): void {
+        const reader = new ASTReader(context);
         const postprocessors = this.getPostprocessorsForNode(node);
 
         for (const postprocessor of postprocessors) {
-            postprocessor.process(node, context, sources);
+            postprocessor.process(node, reader, ModernConfiguration, sources);
         }
     }
 
-    processContext(context: ASTContext, sources?: Map<string, string>): void {
+    processContext(
+        reader: ASTReader,
+        config: ASTReaderConfiguration,
+        sources?: Map<string, string>
+    ): void {
         for (const postprocessor of this.nodePostprocessors) {
-            for (const node of context.nodes) {
+            for (const node of reader.context.nodes) {
                 if (postprocessor.isSupportedNode(node)) {
-                    postprocessor.process(node, context, sources);
+                    postprocessor.process(node, reader, config, sources);
                 }
             }
         }
@@ -222,7 +240,7 @@ export class ASTReader {
             result.push(sourceUnit);
         }
 
-        this.postprocessor.processContext(this.context, sources);
+        this.postprocessor.processContext(this, ModernConfiguration, sources);
 
         return result;
     }

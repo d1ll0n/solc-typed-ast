@@ -1,8 +1,10 @@
 import { ASTNode } from "../../ast_node";
 import { IdentifierPath } from "../meta/identifier_path";
-import { TypeName } from "./type_name";
+import { BaseTypeName } from "./type_name";
 
-export class UserDefinedTypeName extends TypeName {
+export class UserDefinedTypeName extends BaseTypeName {
+    readonly type = "UserDefinedTypeName";
+
     /**
      * Name of the defined type
      */

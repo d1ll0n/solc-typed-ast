@@ -7,6 +7,7 @@ import {
     CompilerVersions08,
     compileSol,
     detectCompileErrors,
+    isYulASTNode,
     PossibleCompilerKinds,
     SourceUnit
 } from "../../../src";
@@ -121,7 +122,10 @@ for (const compilerKind of PossibleCompilerKinds) {
             expect(sourceUnit.src).toEqual("0:9539:0");
             expect(sourceUnit.absolutePath).toEqual(mainSample);
             expect(sourceUnit.children.length).toEqual(37);
-            expect(sourceUnit.getChildren().length).toEqual(819);
+            // expect(sourceUnit.getChildren().length).toEqual(819);
+
+            const children = sourceUnit.getChildrenBySelector((node) => !isYulASTNode(node), false);
+            expect(children.length).toEqual(819);
         });
 
         it(`Validate parsed output (${astKind})`, () => {

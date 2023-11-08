@@ -2,6 +2,7 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class Assignment extends Expression {
+    readonly type = "Assignment";
     /**
      * String representation of the operator, e.g. `+=` in `a += 2`
      */

@@ -6,15 +6,15 @@ pragma abicoder v2;
 
 import "./latest_imports_08.sol" as LI;
 
-///  Enum
-///  Doc
+/// Enum
+/// Doc
 enum EnumABC {
     A,
     B,
     C
     /// Enum
-    ///  Dangling
-    ///   Doc
+    /// Dangling
+    /// Doc
 }
 
 type Price is uint128;
@@ -23,13 +23,13 @@ type Quantity is uint128;
 
 type RestrictedNumber_0813 is int256;
 
-///  Struct
-///  Doc
+/// Struct
+/// Doc
 struct Some {
     uint x;
     /// Struct
-    ///  Dangling
-    ///   Doc
+    /// Dangling
+    /// Doc
 }
 
 using A_0813 for RestrictedNumber_0813;
@@ -78,7 +78,7 @@ contract EmitsIdentifierPath is LI.SomeContract {
         LI.SomeContract.SomeStruct memory s = LI.SomeContract.SomeStruct(10);
     }
 
-    function some() override(LI.SomeContract) public returns (uint) {
+    function some() public override(LI.SomeContract) returns (uint) {
         return 2;
     }
 }
@@ -121,7 +121,7 @@ contract Features082 {
         _;
     }
 
-    function stmtStructDocs() public modStructDocs() {
+    function stmtStructDocs() public modStructDocs {
         /// VariableDeclarationStatement docstring
         uint a = (1);
         /// ExpressionStatement docstring
@@ -384,7 +384,7 @@ contract SomeContract {
         uint n;
     }
 
-    function some() virtual public returns (uint) {
+    function some() public virtual returns (uint) {
         return 1;
     }
 }

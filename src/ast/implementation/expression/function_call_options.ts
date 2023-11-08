@@ -2,6 +2,7 @@ import { ASTNode } from "../../ast_node";
 import { Expression } from "./expression";
 
 export class FunctionCallOptions extends Expression {
+	readonly type = "FunctionCallOptions";
     /**
      * Function expression. For following example:
      * ```

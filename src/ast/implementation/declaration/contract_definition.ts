@@ -25,6 +25,7 @@ export class ContractDefinition
     extends ASTNodeWithChildren<ASTNode>
     implements WithPrecedingDocs, WithDanglingDocs
 {
+	readonly type = "ContractDefinition";
     docString?: string;
     danglingDocString?: string;
 

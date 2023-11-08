@@ -5,7 +5,7 @@ import { VariableDeclaration } from "../implementation/declaration/variable_decl
 import { Expression } from "../implementation/expression/expression";
 import { OverrideSpecifier } from "../implementation/meta/override_specifier";
 import { StructuredDocumentation } from "../implementation/meta/structured_documentation";
-import { TypeName } from "../implementation/type/type_name";
+import { TypeName, isTypeName } from "../implementation/type";
 import { LegacyNodeProcessor } from "./node_processor";
 
 export class LegacyVariableDeclarationProcessor extends LegacyNodeProcessor<VariableDeclaration> {
@@ -70,7 +70,7 @@ export class LegacyVariableDeclarationProcessor extends LegacyNodeProcessor<Vari
 
         let type: TypeName | undefined;
 
-        if (node instanceof TypeName) {
+        if (node && isTypeName(node)) {
             type = node as TypeName;
 
             node = children.shift();

@@ -1,6 +1,6 @@
 import { ASTNode } from "../../ast_node";
 
-export class TypeName extends ASTNode {
+export class BaseTypeName extends ASTNode {
     /**
      * Type string, e.g. `uint256`
      */
@@ -13,7 +13,7 @@ export class TypeName extends ASTNode {
     }
 }
 
-export type TypeNameConstructor<T extends TypeName> = new (
+export type TypeNameConstructor<T extends BaseTypeName> = new (
     id: number,
     src: string,
     typeString: string,

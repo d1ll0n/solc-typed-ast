@@ -7,6 +7,7 @@ export class ModernNodeProcessor<T extends ASTNode> implements ASTNodeProcessor<
         config: ASTReaderConfiguration,
         raw: any
     ): ConstructorParameters<ASTNodeConstructor<T>> {
-        return [raw.id, raw.src, undefined, raw];
+        const id = raw.id ?? reader.context.nextId;
+        return [id, raw.src, undefined, raw];
     }
 }

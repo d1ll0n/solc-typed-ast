@@ -1,6 +1,8 @@
 import { ASTNode, ASTNodeConstructor } from "./ast_node";
+import { argExtractionMapping } from "./ast_node_extractors";
 import { ASTContext, ASTPostprocessor } from "./ast_reader";
 import { FunctionStateMutability, FunctionVisibility } from "./constants";
+import { ASTNodeConstructorType } from "./implementation";
 import { ContractDefinition } from "./implementation/declaration/contract_definition";
 import { EnumDefinition } from "./implementation/declaration/enum_definition";
 import { EnumValue } from "./implementation/declaration/enum_value";
@@ -80,597 +82,593 @@ type Specific<Args extends any[]> = Args["length"] extends 0
 
 type IDMap = Map<number, number>;
 
-const argExtractionMapping = new Map<ASTNodeConstructor<ASTNode>, (node: any) => any[]>([
-    [ASTNode, (node: ASTNode): Specific<ConstructorParameters<typeof ASTNode>> => [node.raw]],
-    [
-        ContractDefinition,
-        (node: ContractDefinition): Specific<ConstructorParameters<typeof ContractDefinition>> => [
-            node.name,
-            node.scope,
-            node.kind,
-            node.abstract,
-            node.fullyImplemented,
-            node.linearizedBaseContracts,
-            node.usedErrors,
-            node.usedEvents,
-            node.documentation,
-            node.children,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        EnumDefinition,
-        (node: EnumDefinition): Specific<ConstructorParameters<typeof EnumDefinition>> => [
-            node.name,
-            node.vMembers,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        EnumValue,
-        (node: EnumValue): Specific<ConstructorParameters<typeof EnumValue>> => [
-            node.name,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        ErrorDefinition,
-        (node: ErrorDefinition): Specific<ConstructorParameters<typeof ErrorDefinition>> => [
-            node.name,
-            node.vParameters,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        EventDefinition,
-        (node: EventDefinition): Specific<ConstructorParameters<typeof EventDefinition>> => [
-            node.anonymous,
-            node.name,
-            node.vParameters,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        FunctionDefinition,
-        (node: FunctionDefinition): Specific<ConstructorParameters<typeof FunctionDefinition>> => [
-            node.scope,
-            node.kind,
-            node.name,
-            node.virtual,
-            node.visibility,
-            node.stateMutability,
-            node.isConstructor,
-            node.vParameters,
-            node.vReturnParameters,
-            node.vModifiers,
-            node.vOverrideSpecifier,
-            node.vBody,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        ModifierDefinition,
-        (node: ModifierDefinition): Specific<ConstructorParameters<typeof ModifierDefinition>> => [
-            node.name,
-            node.virtual,
-            node.visibility,
-            node.vParameters,
-            node.vOverrideSpecifier,
-            node.vBody,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        StructDefinition,
-        (node: StructDefinition): Specific<ConstructorParameters<typeof StructDefinition>> => [
-            node.name,
-            node.scope,
-            node.visibility,
-            node.vMembers,
-            node.documentation,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        UserDefinedValueTypeDefinition,
-        (
-            node: UserDefinedValueTypeDefinition
-        ): Specific<ConstructorParameters<typeof UserDefinedValueTypeDefinition>> => [
-            node.name,
-            node.underlyingType,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        VariableDeclaration,
-        (
-            node: VariableDeclaration
-        ): Specific<ConstructorParameters<typeof VariableDeclaration>> => [
-            node.constant,
-            node.indexed,
-            node.name,
-            node.scope,
-            node.stateVariable,
-            node.storageLocation,
-            node.visibility,
-            node.mutability,
-            node.typeString,
-            node.documentation,
-            node.vType,
-            node.vOverrideSpecifier,
-            node.vValue,
-            node.nameLocation,
-            node.raw
-        ]
-    ],
-    [
-        Assignment,
-        (node: Assignment): Specific<ConstructorParameters<typeof Assignment>> => [
-            node.typeString,
-            node.operator,
-            node.vLeftHandSide,
-            node.vRightHandSide,
-            node.raw
-        ]
-    ],
-    [
-        BinaryOperation,
-        (node: BinaryOperation): Specific<ConstructorParameters<typeof BinaryOperation>> => [
-            node.typeString,
-            node.operator,
-            node.vLeftExpression,
-            node.vRightExpression,
-            node.userFunction,
-            node.raw
-        ]
-    ],
-    [
-        Conditional,
-        (node: Conditional): Specific<ConstructorParameters<typeof Conditional>> => [
-            node.typeString,
-            node.vCondition,
-            node.vTrueExpression,
-            node.vFalseExpression,
-            node.raw
-        ]
-    ],
-    [
-        ElementaryTypeNameExpression,
-        (
-            node: ElementaryTypeNameExpression
-        ): Specific<ConstructorParameters<typeof ElementaryTypeNameExpression>> => [
-            node.typeString,
-            node.typeName,
-            node.raw
-        ]
-    ],
-    [
-        FunctionCallOptions,
-        (
-            node: FunctionCallOptions
-        ): Specific<ConstructorParameters<typeof FunctionCallOptions>> => [
-            node.typeString,
-            node.vExpression,
-            node.vOptionsMap,
-            node.raw
-        ]
-    ],
-    [
-        FunctionCall,
-        (node: FunctionCall): Specific<ConstructorParameters<typeof FunctionCall>> => [
-            node.typeString,
-            node.kind,
-            node.vExpression,
-            node.vArguments,
-            node.fieldNames,
-            node.raw
-        ]
-    ],
-    [
-        Identifier,
-        (node: Identifier): Specific<ConstructorParameters<typeof Identifier>> => [
-            node.typeString,
-            node.name,
-            node.referencedDeclaration,
-            node.raw
-        ]
-    ],
-    [
-        IdentifierPath,
-        (node: IdentifierPath): Specific<ConstructorParameters<typeof IdentifierPath>> => [
-            node.name,
-            node.referencedDeclaration,
-            node.raw
-        ]
-    ],
-    [
-        IndexAccess,
-        (node: IndexAccess): Specific<ConstructorParameters<typeof IndexAccess>> => [
-            node.typeString,
-            node.vBaseExpression,
-            node.vIndexExpression,
-            node.raw
-        ]
-    ],
-    [
-        IndexRangeAccess,
-        (node: IndexRangeAccess): Specific<ConstructorParameters<typeof IndexRangeAccess>> => [
-            node.typeString,
-            node.vBaseExpression,
-            node.vStartExpression,
-            node.vEndExpression,
-            node.raw
-        ]
-    ],
-    [
-        Literal,
-        (node: Literal): Specific<ConstructorParameters<typeof Literal>> => [
-            node.typeString,
-            node.kind,
-            node.hexValue,
-            node.value,
-            node.subdenomination,
-            node.raw
-        ]
-    ],
-    [
-        MemberAccess,
-        (node: MemberAccess): Specific<ConstructorParameters<typeof MemberAccess>> => [
-            node.typeString,
-            node.vExpression,
-            node.memberName,
-            node.referencedDeclaration,
-            node.raw
-        ]
-    ],
-    [
-        NewExpression,
-        (node: NewExpression): Specific<ConstructorParameters<typeof NewExpression>> => [
-            node.typeString,
-            node.vTypeName,
-            node.raw
-        ]
-    ],
-    [
-        TupleExpression,
-        (node: TupleExpression): Specific<ConstructorParameters<typeof TupleExpression>> => [
-            node.typeString,
-            node.isInlineArray,
-            node.vOriginalComponents,
-            node.raw
-        ]
-    ],
-    [
-        UnaryOperation,
-        (node: UnaryOperation): Specific<ConstructorParameters<typeof UnaryOperation>> => [
-            node.typeString,
-            node.prefix,
-            node.operator,
-            node.vSubExpression,
-            node.userFunction,
-            node.raw
-        ]
-    ],
-    [
-        ImportDirective,
-        (node: ImportDirective): Specific<ConstructorParameters<typeof ImportDirective>> => [
-            node.file,
-            node.absolutePath,
-            node.unitAlias,
-            node.symbolAliases,
-            node.scope,
-            node.sourceUnit,
-            node.raw
-        ]
-    ],
-    [
-        InheritanceSpecifier,
-        (
-            node: InheritanceSpecifier
-        ): Specific<ConstructorParameters<typeof InheritanceSpecifier>> => [
-            node.vBaseType,
-            node.vArguments,
-            node.raw
-        ]
-    ],
-    [
-        ModifierInvocation,
-        (node: ModifierInvocation): Specific<ConstructorParameters<typeof ModifierInvocation>> => [
-            node.vModifierName,
-            node.vArguments,
-            node.kind,
-            node.raw
-        ]
-    ],
-    [
-        OverrideSpecifier,
-        (node: OverrideSpecifier): Specific<ConstructorParameters<typeof OverrideSpecifier>> => [
-            node.vOverrides,
-            node.raw
-        ]
-    ],
-    [
-        ParameterList,
-        (node: ParameterList): Specific<ConstructorParameters<typeof ParameterList>> => [
-            node.vParameters,
-            node.raw
-        ]
-    ],
-    [
-        PragmaDirective,
-        (node: PragmaDirective): Specific<ConstructorParameters<typeof PragmaDirective>> => [
-            node.literals,
-            node.raw
-        ]
-    ],
-    [
-        SourceUnit,
-        (node: SourceUnit): Specific<ConstructorParameters<typeof SourceUnit>> => [
-            node.sourceEntryKey,
-            node.sourceListIndex,
-            node.absolutePath,
-            node.exportedSymbols,
-            node.children,
-            node.license,
-            node.raw
-        ]
-    ],
-    [
-        StructuredDocumentation,
-        (
-            node: StructuredDocumentation
-        ): Specific<ConstructorParameters<typeof StructuredDocumentation>> => [node.text, node.raw]
-    ],
-    [
-        UsingForDirective,
-        (node: UsingForDirective): Specific<ConstructorParameters<typeof UsingForDirective>> => [
-            node.isGlobal,
-            node.vLibraryName,
-            node.vFunctionList,
-            node.vTypeName,
-            node.raw
-        ]
-    ],
-    [
-        Block,
-        (node: Block): Specific<ConstructorParameters<typeof Block>> => [
-            node.vStatements,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        UncheckedBlock,
-        (node: UncheckedBlock): Specific<ConstructorParameters<typeof UncheckedBlock>> => [
-            node.vStatements,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        Break,
-        (node: Break): Specific<ConstructorParameters<typeof Break>> => [
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        Continue,
-        (node: Continue): Specific<ConstructorParameters<typeof Continue>> => [
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        DoWhileStatement,
-        (node: DoWhileStatement): Specific<ConstructorParameters<typeof DoWhileStatement>> => [
-            node.vCondition,
-            node.vBody,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        EmitStatement,
-        (node: EmitStatement): Specific<ConstructorParameters<typeof EmitStatement>> => [
-            node.vEventCall,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        ExpressionStatement,
-        (
-            node: ExpressionStatement
-        ): Specific<ConstructorParameters<typeof ExpressionStatement>> => [
-            node.vExpression,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        ForStatement,
-        (node: ForStatement): Specific<ConstructorParameters<typeof ForStatement>> => [
-            node.vBody,
-            node.vInitializationExpression,
-            node.vCondition,
-            node.vLoopExpression,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        IfStatement,
-        (node: IfStatement): Specific<ConstructorParameters<typeof IfStatement>> => [
-            node.vCondition,
-            node.vTrueBody,
-            node.vFalseBody,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        InlineAssembly,
-        (node: InlineAssembly): Specific<ConstructorParameters<typeof InlineAssembly>> => [
-            node.externalReferences,
-            node.operations,
-            node.yul,
-            node.flags,
-            node.evmVersion,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        PlaceholderStatement,
-        (
-            node: PlaceholderStatement
-        ): Specific<ConstructorParameters<typeof PlaceholderStatement>> => [
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        Return,
-        (node: Return): Specific<ConstructorParameters<typeof Return>> => [
-            node.functionReturnParameters,
-            node.vExpression,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        RevertStatement,
-        (node: RevertStatement): Specific<ConstructorParameters<typeof RevertStatement>> => [
-            node.errorCall,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        Throw,
-        (node: Throw): Specific<ConstructorParameters<typeof Throw>> => [
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        TryCatchClause,
-        (node: TryCatchClause): Specific<ConstructorParameters<typeof TryCatchClause>> => [
-            node.errorName,
-            node.vBlock,
-            node.vParameters,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        TryStatement,
-        (node: TryStatement): Specific<ConstructorParameters<typeof TryStatement>> => [
-            node.vExternalCall,
-            node.vClauses,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        VariableDeclarationStatement,
-        (
-            node: VariableDeclarationStatement
-        ): Specific<ConstructorParameters<typeof VariableDeclarationStatement>> => [
-            node.assignments,
-            node.vDeclarations,
-            node.vInitialValue,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        WhileStatement,
-        (node: WhileStatement): Specific<ConstructorParameters<typeof WhileStatement>> => [
-            node.vCondition,
-            node.vBody,
-            node.documentation,
-            node.raw
-        ]
-    ],
-    [
-        ArrayTypeName,
-        (node: ArrayTypeName): Specific<ConstructorParameters<typeof ArrayTypeName>> => [
-            node.typeString,
-            node.vBaseType,
-            node.vLength,
-            node.raw
-        ]
-    ],
-    [
-        ElementaryTypeName,
-        (node: ElementaryTypeName): Specific<ConstructorParameters<typeof ElementaryTypeName>> => [
-            node.typeString,
-            node.name,
-            node.stateMutability,
-            node.raw
-        ]
-    ],
-    [
-        FunctionTypeName,
-        (node: FunctionTypeName): Specific<ConstructorParameters<typeof FunctionTypeName>> => [
-            node.typeString,
-            node.visibility,
-            node.stateMutability,
-            node.vParameterTypes,
-            node.vReturnParameterTypes,
-            node.raw
-        ]
-    ],
-    [
-        Mapping,
-        (node: Mapping): Specific<ConstructorParameters<typeof Mapping>> => [
-            node.typeString,
-            node.vKeyType,
-            node.vValueType,
-            node.raw
-        ]
-    ],
-    [
-        UserDefinedTypeName,
-        (
-            node: UserDefinedTypeName
-        ): Specific<ConstructorParameters<typeof UserDefinedTypeName>> => [
-            node.typeString,
-            node.name,
-            node.referencedDeclaration,
-            node.path,
-            node.raw
-        ]
-    ]
-]);
+// const argExtractionMapping = new Map<ASTNodeConstructor<ASTNode>, (node: any) => any[]>([
+//     [ASTNode, (node: ASTNode): Specific<ConstructorParameters<typeof ASTNode>> => [node.raw]],
+//     [
+//         ContractDefinition,
+//         (node: ContractDefinition): Specific<ConstructorParameters<typeof ContractDefinition>> => [
+//             node.name,
+//             node.scope,
+//             node.kind,
+//             node.abstract,
+//             node.fullyImplemented,
+//             node.linearizedBaseContracts,
+//             node.usedErrors,
+//             node.usedEvents,
+//             node.documentation,
+//             node.children,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         EnumDefinition,
+//         (node: EnumDefinition): Specific<ConstructorParameters<typeof EnumDefinition>> => [
+//             node.name,
+//             node.vMembers,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         EnumValue,
+//         (node: EnumValue): Specific<ConstructorParameters<typeof EnumValue>> => [
+//             node.name,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ErrorDefinition,
+//         (node: ErrorDefinition): Specific<ConstructorParameters<typeof ErrorDefinition>> => [
+//             node.name,
+//             node.vParameters,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         EventDefinition,
+//         (node: EventDefinition): Specific<ConstructorParameters<typeof EventDefinition>> => [
+//             node.anonymous,
+//             node.name,
+//             node.vParameters,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         FunctionDefinition,
+//         (node: FunctionDefinition): Specific<ConstructorParameters<typeof FunctionDefinition>> => [
+//             node.scope,
+//             node.kind,
+//             node.name,
+//             node.virtual,
+//             node.visibility,
+//             node.stateMutability,
+//             node.isConstructor,
+//             node.vParameters,
+//             node.vReturnParameters,
+//             node.vModifiers,
+//             node.vOverrideSpecifier,
+//             node.vBody,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ModifierDefinition,
+//         (node: ModifierDefinition): Specific<ConstructorParameters<typeof ModifierDefinition>> => [
+//             node.name,
+//             node.virtual,
+//             node.visibility,
+//             node.vParameters,
+//             node.vOverrideSpecifier,
+//             node.vBody,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         StructDefinition,
+//         (node: StructDefinition): Specific<ConstructorParameters<typeof StructDefinition>> => [
+//             node.name,
+//             node.scope,
+//             node.visibility,
+//             node.vMembers,
+//             node.documentation,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         UserDefinedValueTypeDefinition,
+//         (
+//             node: UserDefinedValueTypeDefinition
+//         ): Specific<ConstructorParameters<typeof UserDefinedValueTypeDefinition>> => [
+//             node.name,
+//             node.underlyingType,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         VariableDeclaration,
+//         (
+//             node: VariableDeclaration
+//         ): Specific<ConstructorParameters<typeof VariableDeclaration>> => [
+//             node.constant,
+//             node.indexed,
+//             node.name,
+//             node.scope,
+//             node.stateVariable,
+//             node.storageLocation,
+//             node.visibility,
+//             node.mutability,
+//             node.typeString,
+//             node.documentation,
+//             node.vType,
+//             node.vOverrideSpecifier,
+//             node.vValue,
+//             node.nameLocation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Assignment,
+//         (node: Assignment): Specific<ConstructorParameters<typeof Assignment>> => [
+//             node.typeString,
+//             node.operator,
+//             node.vLeftHandSide,
+//             node.vRightHandSide,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         BinaryOperation,
+//         (node: BinaryOperation): Specific<ConstructorParameters<typeof BinaryOperation>> => [
+//             node.typeString,
+//             node.operator,
+//             node.vLeftExpression,
+//             node.vRightExpression,
+//             node.userFunction,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Conditional,
+//         (node: Conditional): Specific<ConstructorParameters<typeof Conditional>> => [
+//             node.typeString,
+//             node.vCondition,
+//             node.vTrueExpression,
+//             node.vFalseExpression,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ElementaryTypeNameExpression,
+//         (
+//             node: ElementaryTypeNameExpression
+//         ): Specific<ConstructorParameters<typeof ElementaryTypeNameExpression>> => [
+//             node.typeString,
+//             node.typeName,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         FunctionCallOptions,
+//         (
+//             node: FunctionCallOptions
+//         ): Specific<ConstructorParameters<typeof FunctionCallOptions>> => [
+//             node.typeString,
+//             node.vExpression,
+//             node.vOptionsMap,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         FunctionCall,
+//         (node: FunctionCall): Specific<ConstructorParameters<typeof FunctionCall>> => [
+//             node.typeString,
+//             node.kind,
+//             node.vExpression,
+//             node.vArguments,
+//             node.fieldNames,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Identifier,
+//         (node: Identifier): Specific<ConstructorParameters<typeof Identifier>> => [
+//             node.typeString,
+//             node.name,
+//             node.referencedDeclaration,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         IdentifierPath,
+//         (node: IdentifierPath): Specific<ConstructorParameters<typeof IdentifierPath>> => [
+//             node.name,
+//             node.referencedDeclaration,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         IndexAccess,
+//         (node: IndexAccess): Specific<ConstructorParameters<typeof IndexAccess>> => [
+//             node.typeString,
+//             node.vBaseExpression,
+//             node.vIndexExpression,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         IndexRangeAccess,
+//         (node: IndexRangeAccess): Specific<ConstructorParameters<typeof IndexRangeAccess>> => [
+//             node.typeString,
+//             node.vBaseExpression,
+//             node.vStartExpression,
+//             node.vEndExpression,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Literal,
+//         (node: Literal): Specific<ConstructorParameters<typeof Literal>> => [
+//             node.typeString,
+//             node.kind,
+//             node.hexValue,
+//             node.value,
+//             node.subdenomination,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         MemberAccess,
+//         (node: MemberAccess): Specific<ConstructorParameters<typeof MemberAccess>> => [
+//             node.typeString,
+//             node.vExpression,
+//             node.memberName,
+//             node.referencedDeclaration,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         NewExpression,
+//         (node: NewExpression): Specific<ConstructorParameters<typeof NewExpression>> => [
+//             node.typeString,
+//             node.vTypeName,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         TupleExpression,
+//         (node: TupleExpression): Specific<ConstructorParameters<typeof TupleExpression>> => [
+//             node.typeString,
+//             node.isInlineArray,
+//             node.vOriginalComponents,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         UnaryOperation,
+//         (node: UnaryOperation): Specific<ConstructorParameters<typeof UnaryOperation>> => [
+//             node.typeString,
+//             node.prefix,
+//             node.operator,
+//             node.vSubExpression,
+//             node.userFunction,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ImportDirective,
+//         (node: ImportDirective): Specific<ConstructorParameters<typeof ImportDirective>> => [
+//             node.file,
+//             node.absolutePath,
+//             node.unitAlias,
+//             node.symbolAliases,
+//             node.scope,
+//             node.sourceUnit,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         InheritanceSpecifier,
+//         (
+//             node: InheritanceSpecifier
+//         ): Specific<ConstructorParameters<typeof InheritanceSpecifier>> => [
+//             node.vBaseType,
+//             node.vArguments,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ModifierInvocation,
+//         (node: ModifierInvocation): Specific<ConstructorParameters<typeof ModifierInvocation>> => [
+//             node.vModifierName,
+//             node.vArguments,
+//             node.kind,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         OverrideSpecifier,
+//         (node: OverrideSpecifier): Specific<ConstructorParameters<typeof OverrideSpecifier>> => [
+//             node.vOverrides,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ParameterList,
+//         (node: ParameterList): Specific<ConstructorParameters<typeof ParameterList>> => [
+//             node.vParameters,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         PragmaDirective,
+//         (node: PragmaDirective): Specific<ConstructorParameters<typeof PragmaDirective>> => [
+//             node.literals,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         SourceUnit,
+//         (node: SourceUnit): Specific<ConstructorParameters<typeof SourceUnit>> => [
+//             node.sourceEntryKey,
+//             node.sourceListIndex,
+//             node.absolutePath,
+//             node.exportedSymbols,
+//             node.children,
+//             node.license,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         StructuredDocumentation,
+//         (
+//             node: StructuredDocumentation
+//         ): Specific<ConstructorParameters<typeof StructuredDocumentation>> => [node.text, node.raw]
+//     ],
+//     [
+//         UsingForDirective,
+//         (node: UsingForDirective): Specific<ConstructorParameters<typeof UsingForDirective>> => [
+//             node.isGlobal,
+//             node.vLibraryName,
+//             node.vFunctionList,
+//             node.vTypeName,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Block,
+//         (node: Block): Specific<ConstructorParameters<typeof Block>> => [
+//             node.vStatements,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         UncheckedBlock,
+//         (node: UncheckedBlock): Specific<ConstructorParameters<typeof UncheckedBlock>> => [
+//             node.vStatements,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Break,
+//         (node: Break): Specific<ConstructorParameters<typeof Break>> => [
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Continue,
+//         (node: Continue): Specific<ConstructorParameters<typeof Continue>> => [
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         DoWhileStatement,
+//         (node: DoWhileStatement): Specific<ConstructorParameters<typeof DoWhileStatement>> => [
+//             node.vCondition,
+//             node.vBody,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         EmitStatement,
+//         (node: EmitStatement): Specific<ConstructorParameters<typeof EmitStatement>> => [
+//             node.vEventCall,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ExpressionStatement,
+//         (
+//             node: ExpressionStatement
+//         ): Specific<ConstructorParameters<typeof ExpressionStatement>> => [
+//             node.vExpression,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ForStatement,
+//         (node: ForStatement): Specific<ConstructorParameters<typeof ForStatement>> => [
+//             node.vBody,
+//             node.vInitializationExpression,
+//             node.vCondition,
+//             node.vLoopExpression,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         IfStatement,
+//         (node: IfStatement): Specific<ConstructorParameters<typeof IfStatement>> => [
+//             node.vCondition,
+//             node.vTrueBody,
+//             node.vFalseBody,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         InlineAssembly,
+//         (node: InlineAssembly): Specific<ConstructorParameters<typeof InlineAssembly>> => [
+//             node.externalReferences,
+//             node.operations,
+//             node.yul,
+//             node.flags,
+//             node.evmVersion,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         PlaceholderStatement,
+//         (
+//             node: PlaceholderStatement
+//         ): Specific<ConstructorParameters<typeof PlaceholderStatement>> => [
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Return,
+//         (node: Return): Specific<ConstructorParameters<typeof Return>> => [
+//             node.functionReturnParameters,
+//             node.vExpression,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         RevertStatement,
+//         (node: RevertStatement): Specific<ConstructorParameters<typeof RevertStatement>> => [
+//             node.errorCall,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Throw,
+//         (node: Throw): Specific<ConstructorParameters<typeof Throw>> => [
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         TryCatchClause,
+//         (node: TryCatchClause): Specific<ConstructorParameters<typeof TryCatchClause>> => [
+//             node.errorName,
+//             node.vBlock,
+//             node.vParameters,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         TryStatement,
+//         (node: TryStatement): Specific<ConstructorParameters<typeof TryStatement>> => [
+//             node.vExternalCall,
+//             node.vClauses,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         VariableDeclarationStatement,
+//         (
+//             node: VariableDeclarationStatement
+//         ): Specific<ConstructorParameters<typeof VariableDeclarationStatement>> => [
+//             node.assignments,
+//             node.vDeclarations,
+//             node.vInitialValue,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         WhileStatement,
+//         (node: WhileStatement): Specific<ConstructorParameters<typeof WhileStatement>> => [
+//             node.vCondition,
+//             node.vBody,
+//             node.documentation,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ArrayTypeName,
+//         (node: ArrayTypeName): Specific<ConstructorParameters<typeof ArrayTypeName>> => [
+//             node.typeString,
+//             node.vBaseType,
+//             node.vLength,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         ElementaryTypeName,
+//         (node: ElementaryTypeName): Specific<ConstructorParameters<typeof ElementaryTypeName>> => [
+//             node.typeString,
+//             node.name,
+//             node.stateMutability,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         FunctionTypeName,
+//         (node: FunctionTypeName): Specific<ConstructorParameters<typeof FunctionTypeName>> => [
+//             node.typeString,
+//             node.visibility,
+//             node.stateMutability,
+//             node.vParameterTypes,
+//             node.vReturnParameterTypes,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         Mapping,
+//         (node: Mapping): Specific<ConstructorParameters<typeof Mapping>> => [
+//             node.typeString,
+//             node.vKeyType,
+//             node.vValueType,
+//             node.raw
+//         ]
+//     ],
+//     [
+//         UserDefinedTypeName,
+//         (
+//             node: UserDefinedTypeName
+//         ): Specific<ConstructorParameters<typeof UserDefinedTypeName>> => [
+//             node.typeString,
+//             node.name,
+//             node.referencedDeclaration,
+//             node.path,
+//             node.raw
+//         ]
+//     ]
+// ]);
 
 export class ASTNodeFactory {
     context: ASTContext;
     postprocessor: ASTPostprocessor;
 
-    private lastId: number;
-
     constructor(context = new ASTContext(), postprocessor = new ASTPostprocessor()) {
         this.context = context;
         this.postprocessor = postprocessor;
-
-        this.lastId = context.lastId;
     }
 
     makeContractDefinition(
@@ -1056,7 +1054,7 @@ export class ASTNodeFactory {
         type: ASTNodeConstructor<T>,
         ...args: Specific<ConstructorParameters<typeof type>>
     ): T {
-        const node = new type(++this.lastId, "0:0:0", ...args);
+        const node = new type(this.context.nextId, "0:0:0", ...args);
 
         this.context.register(node);
 
@@ -1148,7 +1146,9 @@ export class ASTNodeFactory {
 
     private copyHelper<T extends ASTNode>(node: T, cache: IDMap): T {
         const ctor = node.constructor as ASTNodeConstructor<T>;
-        const extractor = argExtractionMapping.get(ctor);
+        const extractor = argExtractionMapping.get(ctor as ASTNodeConstructorType) as (
+            node: T
+        ) => Specific<ConstructorParameters<typeof ctor>>;
 
         if (extractor === undefined) {
             throw new Error(`Unable to find extractor for node constructor ${ctor.name}`);
