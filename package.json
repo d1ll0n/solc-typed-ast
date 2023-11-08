@@ -1,5 +1,5 @@
 {
-    "name": "solc-typed-ast",
+    "name": "@d1ll0n/solc-typed-ast",
     "version": "17.0.2",
     "description": "A TypeScript library providing a normalized typed Solidity AST along with the utilities necessary to generate the AST (from Solc) and traverse/manipulate it.",
     "keywords": [],
@@ -33,6 +33,7 @@
         "findup-sync": "^5.0.0",
         "fs-extra": "^11.1.1",
         "jsel": "^1.1.6",
+        "mathjs": "npm:@d1ll0n/mathjs",
         "semver": "^7.5.4",
         "solc": "^0.8.22",
         "src-location": "^1.1.0",
@@ -41,7 +42,7 @@
     "devDependencies": {
         "@types/fs-extra": "^11.0.3",
         "@types/mocha": "^10.0.3",
-        "@types/node": "^16.18.59",
+        "@types/node": "^16.18.60",
         "@types/semver": "^7.5.4",
         "@typescript-eslint/eslint-plugin": "^6.9.1",
         "@typescript-eslint/parser": "^6.9.1",
