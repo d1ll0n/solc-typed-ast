@@ -25,7 +25,8 @@
         "@typescript-eslint/explicit-module-boundary-types": [
             "error",
             { "allowArgumentsExplicitlyTypedAsAny": true }
-        ]
+        ],
+        "@typescript-eslint/no-unsafe-declaration-merging": "off"
     },
     "ignorePatterns": [
         "src/compile/inference/file_level_definitions_parser_header.ts",
