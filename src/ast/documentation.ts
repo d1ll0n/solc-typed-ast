@@ -133,7 +133,7 @@ export function setDanglingDocumentation<T extends ASTNode = ASTNode>(
 
         if (old instanceof StructuredDocumentation) {
             if (value !== old) {
-                node.replaceChild<any, any>(value, old);
+                node.replaceChild(value, old);
             }
         } else {
             node.appendChild(value as any);
