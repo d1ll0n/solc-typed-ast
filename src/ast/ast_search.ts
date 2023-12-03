@@ -38,18 +38,6 @@ export type NodeAttributes<T> = {
         : never;
 };
 
-// type Attr = NodeAttributes<ASTNodeMap["VariableDeclaration"]>;
-// type l = Attr[""]
-// type ab = number | undefined;
-// type cd = string | undefined;
-// type l = ab extends string | number | undefined ? true : false;
-/* 
-
-
-const args: SolSearchAttributes<"VariableDeclaration"> = {
-  vType: {}
-}; */
-
 export class ASTSearch {
     private xPaths: XPath[] = [];
 
@@ -136,17 +124,17 @@ function getParentsRecursive(
     return parents;
 }
 
-type WithInvertedProperties<Obj> = Obj & {
+export type WithInvertedProperties<Obj> = Obj & {
     any?: Obj | Obj[];
     not?: Obj | Obj[];
     notAny?: Obj | Obj[];
 };
 
-type SolChildSearchType = {
+export type SolChildSearchType = {
     [K in ASTNodeKind]: { tag: K } & SolSearchAttributes<K>;
 };
 
-type SolSearchAttributes<T extends ASTNodeKind> = WithInvertedProperties<
+export type SolSearchAttributes<T extends ASTNodeKind> = WithInvertedProperties<
     Partial<StringOrNumberAttributes<ASTNodeMap[T]> & NodeAttributes<ASTNodeMap[T]>> & {
         children?: Array<SolChildSearchType[keyof SolChildSearchType]>;
         ancestors?: Array<SolChildSearchType[keyof SolChildSearchType]>;
