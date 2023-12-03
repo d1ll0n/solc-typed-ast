@@ -6,7 +6,7 @@ import { YulStatement } from "./yul_statement";
 export class YulCode extends YulStatement {
     readonly type = "YulCode";
 
-    block: YulBlock;
+    vBlock: YulBlock;
 
     constructor(
         id: number,
@@ -17,11 +17,11 @@ export class YulCode extends YulStatement {
         nativeSrc?: string
     ) {
         super(id, src, documentation, raw, nativeSrc);
-        this.block = block;
+        this.vBlock = block;
         this.acceptChildren();
     }
 
     get children(): readonly YulASTNode[] {
-        return this.pickNodes(this.documentation, this.block);
+        return this.pickNodes(this.documentation, this.vBlock);
     }
 }

@@ -9,8 +9,8 @@ export class YulObject extends YulStatementWithChildren<
     readonly type = "YulObject";
 
     name: string;
-    code: YulCode;
-    subObjects: Array<YulObject | YulData>;
+    vCode: YulCode;
+    vSubObjects: Array<YulObject | YulData>;
 
     constructor(
         id: number,
@@ -24,8 +24,8 @@ export class YulObject extends YulStatementWithChildren<
     ) {
         super(id, src, documentation, raw, nativeSrc);
         this.name = name;
-        this.code = code;
-        this.subObjects = subObjects;
+        this.vCode = code;
+        this.vSubObjects = subObjects;
         this.acceptChildren();
     }
 }

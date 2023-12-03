@@ -628,7 +628,7 @@ const argumentExtractors = [
     [
         YulCode,
         (node: YulCode) =>
-            extractProperties(node, ["block", "documentation", "raw", "nativeSrc"] as const)
+            extractProperties(node, ["vBlock", "documentation", "raw", "nativeSrc"] as const)
     ],
     [
         YulContinue,
@@ -702,8 +702,8 @@ const argumentExtractors = [
         (node: YulObject) =>
             extractProperties(node, [
                 "name",
-                "code",
-                "subObjects",
+                "vCode",
+                "vSubObjects",
                 "documentation",
                 "raw",
                 "nativeSrc"
