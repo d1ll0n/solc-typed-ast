@@ -85,7 +85,9 @@ import {
     YulBlock,
     YulBreak,
     YulCase,
+    YulCode,
     YulContinue,
+    YulData,
     YulExpressionStatement,
     YulForLoop,
     YulFunctionCall,
@@ -94,6 +96,7 @@ import {
     YulIf,
     YulLeave,
     YulLiteral,
+    YulObject,
     YulSwitch,
     YulTypedName,
     YulVariableDeclaration
@@ -1695,6 +1698,45 @@ class YulCaseWriter implements ASTNodeWriter {
     }
 }
 
+export class YulCodeWriter implements ASTNodeWriter {
+    writeInner(node: YulCode, writer: ASTWriter): SrcDesc {
+        const formatter = writer.formatter;
+        const wrap = formatter.renderWrap();
+
+        formatter.increaseNesting();
+
+        const result: SrcDesc = [
+            "code {",
+            wrap,
+            formatter.renderIndent(),
+            ...writer.desc(node.vBlock),
+            wrap
+        ];
+
+        formatter.decreaseNesting();
+
+        result.push(formatter.renderIndent(), "}");
+        return result;
+    }
+
+    writeWhole(node: YulCode, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
+    }
+}
+
+class YulDataWriter implements ASTNodeWriter {
+    writeInner(node: YulData): SrcDesc {
+        return ['data "' + (node.name ?? ".metadata") + '" hex"' + node.value + '"'];
+    }
+
+    writeWhole(node: YulData, writer: ASTWriter): SrcDesc {
+        return [...writePrecedingDocs(node.documentation, writer), [node, this.writeInner(node)]];
+    }
+}
+
 class YulSwitchWriter implements ASTNodeWriter {
     writeInner(node: YulSwitch, writer: ASTWriter): SrcDesc {
         const formatter = writer.formatter;
@@ -1762,6 +1804,44 @@ class YulForLoopWriter implements ASTNodeWriter {
     }
 
     writeWhole(node: YulForLoop, writer: ASTWriter): SrcDesc {
+        return [
+            ...writePrecedingDocs(node.documentation, writer),
+            [node, this.writeInner(node, writer)]
+        ];
+    }
+}
+
+class YulObjectWriter implements ASTNodeWriter {
+    writeInner(node: YulObject, writer: ASTWriter): SrcDesc {
+        const formatter = writer.formatter;
+        formatter.increaseNesting();
+        const children = [];
+        if (node.vCode) {
+            children.push(node.vCode);
+        }
+        if (node.vSubObjects.length) {
+            children.push(...node.vSubObjects);
+        }
+        const statements = children.map<SrcDesc>((stmt) => [
+            formatter.renderIndent(),
+            ...writer.desc(stmt)
+        ]);
+        formatter.decreaseNesting();
+
+        const wrap = formatter.renderWrap();
+
+        return [
+            `object "${node.name}" {`,
+            wrap,
+            ...flatJoin(statements, wrap),
+            wrap,
+            formatter.renderIndent(),
+            "}"
+        ];
+        //"object " + node.name + " {" + wrap + statements.join(wrap) + wrap + indent + "}";
+    }
+
+    writeWhole(node: YulObject, writer: ASTWriter): SrcDesc {
         return [
             ...writePrecedingDocs(node.documentation, writer),
             [node, this.writeInner(node, writer)]
@@ -1860,6 +1940,7 @@ export const DefaultASTWriterMapping = new Map<ASTNodeConstructor<ASTNode>, ASTN
     [PragmaDirective, new PragmaDirectiveWriter()],
     [SourceUnit, new SourceUnitWriter()],
     [YulBlock, new YulBlockWriter()],
+    [YulData, new YulDataWriter()],
     [YulLiteral, new YulLiteralWriter()],
     [YulIdentifier, new YulIdentifierWriter()],
     [YulTypedName, new YulTypedNameWriter()],
@@ -1869,10 +1950,12 @@ export const DefaultASTWriterMapping = new Map<ASTNodeConstructor<ASTNode>, ASTN
     [YulAssignment, new YulAssignmentWriter()],
     [YulIf, new YulIfWriter()],
     [YulCase, new YulCaseWriter()],
+    [YulCode, new YulCodeWriter()],
     [YulSwitch, new YulSwitchWriter()],
     [YulContinue, new YulContinueWriter()],
     [YulBreak, new YulBreakWriter()],
     [YulLeave, new YulLeaveWriter()],
     [YulForLoop, new YulForLoopWriter()],
-    [YulFunctionDefinition, new YulFunctionDefinitionWriter()]
+    [YulFunctionDefinition, new YulFunctionDefinitionWriter()],
+    [YulObject, new YulObjectWriter()]
 ]);
