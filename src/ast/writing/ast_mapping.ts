@@ -1699,30 +1699,44 @@ class YulCaseWriter implements ASTNodeWriter {
 }
 
 export class YulCodeWriter implements ASTNodeWriter {
-    writeInner(node: YulCode, writer: ASTWriter): SrcDesc {
+    writeInner(node: YulBlock, writer: ASTWriter): SrcDesc {
+        if (
+            node.children.length === 0 ||
+            (node.children.length === 1 && node.documentation === node.firstChild)
+        ) {
+            return ["{}"];
+        }
+
         const formatter = writer.formatter;
         const wrap = formatter.renderWrap();
+        const oldIndent = formatter.renderIndent();
 
         formatter.increaseNesting();
 
-        const result: SrcDesc = [
+        const doc = node.documentation;
+        const nested = node.children.filter((node) => node !== doc);
+
+        const res: SrcDesc = [
             "code {",
             wrap,
-            formatter.renderIndent(),
-            ...writer.desc(node.vBlock),
-            wrap
+            ...flatJoin(
+                nested.map<SrcDesc>((stmt) => [formatter.renderIndent(), ...writer.desc(stmt)]),
+                wrap
+            ),
+            wrap,
+            oldIndent,
+            "}"
         ];
 
         formatter.decreaseNesting();
 
-        result.push(formatter.renderIndent(), "}");
-        return result;
+        return res;
     }
 
     writeWhole(node: YulCode, writer: ASTWriter): SrcDesc {
         return [
             ...writePrecedingDocs(node.documentation, writer),
-            [node, this.writeInner(node, writer)]
+            [node, this.writeInner(node.vBlock, writer)]
         ];
     }
 }
