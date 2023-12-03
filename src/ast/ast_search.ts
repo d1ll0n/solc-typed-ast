@@ -202,6 +202,5 @@ function getSolPropertySelectors<T extends ASTNodeKind>(
         andProps.push(wrapWithSeparators(combineSearchProperties(notAny), "or", "not(", ")"));
     });
     const propertySelectors = wrapWithSeparators(andProps.filter(Boolean), "and", "[", "]");
-    console.log(`${tag}${propertySelectors}`);
     return `${tag}${propertySelectors}`;
 }
