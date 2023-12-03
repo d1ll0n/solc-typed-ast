@@ -62,6 +62,8 @@ import {
     YulBlock,
     YulBreak,
     YulCase,
+    YulCode,
+    YulData,
     YulContinue,
     YulExpressionStatement,
     YulFunctionCall,
@@ -70,6 +72,7 @@ import {
     YulIdentifier,
     YulIf,
     YulLeave,
+    YulObject,
     YulLiteral,
     YulSwitch,
     YulTypedName,
@@ -137,7 +140,9 @@ import { ModernYulAssignmentProcessor } from "./yul_assignment_processor";
 import { ModernYulBlockProcessor } from "./yul_block_processor";
 import { ModernYulBreakProcessor } from "./yul_break_processor";
 import { ModernYulCaseProcessor } from "./yul_case_processor";
+import { ModernYulCodeProcessor } from "./yul_code_processor";
 import { ModernYulContinueProcessor } from "./yul_continue_processor";
+import { ModernYulDataProcessor } from "./yul_data_processor";
 import { ModernYulExpressionStatementProcessor } from "./yul_expression_statement_processor";
 import { ModernYulForLoopProcessor } from "./yul_for_loop_processor";
 import { ModernYulFunctionCallProcessor } from "./yul_function_call_processor";
@@ -145,6 +150,7 @@ import { ModernYulFunctionDefinitionProcessor } from "./yul_function_definition_
 import { ModernYulIdentifierProcessor } from "./yul_identifier_processor";
 import { ModernYulIfProcessor } from "./yul_if_processor";
 import { ModernYulLeaveProcessor } from "./yul_leave_processor";
+import { ModernYulObjectProcessor } from "./yul_object_processor";
 import { ModernYulLiteralProcessor } from "./yul_literal_processor";
 import { ModernYulSwitchProcessor } from "./yul_switch_processor";
 import { ModernYulTypedNameProcessor } from "./yul_typed_name_processor";
@@ -220,7 +226,9 @@ const processors = {
     YulBlock: new ModernYulBlockProcessor(),
     YulBreak: new ModernYulBreakProcessor(),
     YulCase: new ModernYulCaseProcessor(),
+    YulCode: new ModernYulCodeProcessor(),
     YulContinue: new ModernYulContinueProcessor(),
+    YulData: new ModernYulDataProcessor(),
     YulExpressionStatement: new ModernYulExpressionStatementProcessor(),
     YulFunctionCall: new ModernYulFunctionCallProcessor(),
     YulFunctionDefinition: new ModernYulFunctionDefinitionProcessor(),
@@ -229,6 +237,7 @@ const processors = {
     YulIf: new ModernYulIfProcessor(),
     YulLeave: new ModernYulLeaveProcessor(),
     YulLiteral: new ModernYulLiteralProcessor(),
+    YulObject: new ModernYulObjectProcessor(),
     YulSwitch: new ModernYulSwitchProcessor(),
     YulTypedName: new ModernYulTypedNameProcessor(),
     YulVariableDeclaration: new ModernYulVariableDeclarationProcessor()
@@ -548,9 +557,19 @@ export const ModernConfiguration: ASTReaderConfiguration = {
             processor: processors.YulCase
         },
 
+        YulCode: {
+            constructor: YulCode,
+            processor: processors.YulCode
+        },
+
         YulContinue: {
             constructor: YulContinue,
             processor: processors.YulContinue
+        },
+
+        YulData: {
+            constructor: YulData,
+            processor: processors.YulData
         },
 
         YulExpressionStatement: {
@@ -591,6 +610,11 @@ export const ModernConfiguration: ASTReaderConfiguration = {
         YulLiteral: {
             constructor: YulLiteral,
             processor: processors.YulLiteral
+        },
+
+        YulObject: {
+            constructor: YulObject,
+            processor: processors.YulObject
         },
 
         YulSwitch: {

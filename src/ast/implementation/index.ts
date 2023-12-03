@@ -85,12 +85,15 @@ export const ASTNodeConstructorsList = [
     yul.YulBlock,
     yul.YulBreak,
     yul.YulCase,
+    yul.YulCode,
     yul.YulContinue,
+    yul.YulData,
     yul.YulExpressionStatement,
     yul.YulFunctionDefinition,
     yul.YulForLoop,
     yul.YulIf,
     yul.YulLeave,
+    yul.YulObject,
     yul.YulSwitch,
     yul.YulVariableDeclaration
 ] as const;

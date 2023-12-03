@@ -1,6 +1,6 @@
 import { extractProperties } from "../misc";
 import { ASTNode } from "./ast_node";
-import { ASTNodeConstructorType, ExtractConstructorClass } from "./implementation/index";
+import { ASTNodeConstructorType, ExtractConstructorClass, YulData } from "./implementation/index";
 import {
     /* declaration */
     ContractDefinition,
@@ -70,11 +70,13 @@ import {
     YulBreak,
     YulContinue,
     YulCase,
+    YulCode,
     YulExpressionStatement,
     YulForLoop,
     YulFunctionDefinition,
     YulIf,
     YulLeave,
+    YulObject,
     YulSwitch,
     YulVariableDeclaration,
     YulLiteral,
@@ -606,27 +608,52 @@ const argumentExtractors = [
     [
         YulAssignment,
         (node: YulAssignment) =>
-            extractProperties(node, ["variableNames", "value", "documentation", "raw"] as const)
+            extractProperties(node, [
+                "variableNames",
+                "value",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
     ],
     [
         YulBlock,
         (node: YulBlock) =>
-            extractProperties(node, ["vStatements", "documentation", "raw"] as const)
+            extractProperties(node, ["vStatements", "documentation", "raw", "nativeSrc"] as const)
     ],
-    [YulBreak, (node: YulBreak) => extractProperties(node, ["documentation", "raw"] as const)],
+    [
+        YulBreak,
+        (node: YulBreak) => extractProperties(node, ["documentation", "raw", "nativeSrc"] as const)
+    ],
+    [
+        YulCode,
+        (node: YulCode) =>
+            extractProperties(node, ["block", "documentation", "raw", "nativeSrc"] as const)
+    ],
     [
         YulContinue,
-        (node: YulContinue) => extractProperties(node, ["documentation", "raw"] as const)
+        (node: YulContinue) =>
+            extractProperties(node, ["documentation", "raw", "nativeSrc"] as const)
     ],
     [
         YulCase,
         (node: YulCase) =>
-            extractProperties(node, ["value", "vBody", "documentation", "raw"] as const)
+            extractProperties(node, [
+                "value",
+                "vBody",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
+    ],
+    [
+        YulData,
+        (node: YulData) => extractProperties(node, ["name", "value", "raw", "nativeSrc"] as const)
     ],
     [
         YulExpressionStatement,
         (node: YulExpressionStatement) =>
-            extractProperties(node, ["vExpression", "documentation", "raw"] as const)
+            extractProperties(node, ["vExpression", "documentation", "raw", "nativeSrc"] as const)
     ],
     [
         YulForLoop,
@@ -637,7 +664,8 @@ const argumentExtractors = [
                 "vPost",
                 "vBody",
                 "documentation",
-                "raw"
+                "raw",
+                "nativeSrc"
             ] as const)
     ],
     [
@@ -650,24 +678,58 @@ const argumentExtractors = [
                 "vReturnParameters",
                 "vBody",
                 "documentation",
-                "raw"
+                "raw",
+                "nativeSrc"
             ] as const)
     ],
     [
         YulIf,
         (node: YulIf) =>
-            extractProperties(node, ["vCondition", "vBody", "documentation", "raw"] as const)
+            extractProperties(node, [
+                "vCondition",
+                "vBody",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
     ],
-    [YulLeave, (node: YulLeave) => extractProperties(node, ["documentation", "raw"] as const)],
+    [
+        YulLeave,
+        (node: YulLeave) => extractProperties(node, ["documentation", "raw", "nativeSrc"] as const)
+    ],
+    [
+        YulObject,
+        (node: YulObject) =>
+            extractProperties(node, [
+                "name",
+                "code",
+                "subObjects",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
+    ],
     [
         YulSwitch,
         (node: YulSwitch) =>
-            extractProperties(node, ["vExpression", "vCases", "documentation", "raw"] as const)
+            extractProperties(node, [
+                "vExpression",
+                "vCases",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
     ],
     [
         YulVariableDeclaration,
         (node: YulVariableDeclaration) =>
-            extractProperties(node, ["variables", "value", "documentation", "raw"] as const)
+            extractProperties(node, [
+                "variables",
+                "value",
+                "documentation",
+                "raw",
+                "nativeSrc"
+            ] as const)
     ],
     [
         YulLiteral,
@@ -678,19 +740,24 @@ const argumentExtractors = [
                 "value",
                 "hexValue",
                 "typeString",
-                "raw"
+                "raw",
+                "nativeSrc"
             ] as const)
     ],
     [
         YulIdentifier,
         (node: YulIdentifier) =>
-            extractProperties(node, ["name", "referencedDeclaration", "raw"] as const)
+            extractProperties(node, ["name", "referencedDeclaration", "raw", "nativeSrc"] as const)
     ],
     [
         YulFunctionCall,
-        (node: YulFunctionCall) => extractProperties(node, ["vFunctionName", "vArguments", "raw"])
+        (node: YulFunctionCall) =>
+            extractProperties(node, ["vFunctionName", "vArguments", "raw", "nativeSrc"])
     ],
-    [YulTypedName, (node: YulTypedName) => extractProperties(node, ["name", "typeString", "raw"])]
+    [
+        YulTypedName,
+        (node: YulTypedName) => extractProperties(node, ["name", "typeString", "raw", "nativeSrc"])
+    ]
 ] as Array<ExtractionKV<ASTNodeConstructorType>>;
 
 interface ASTNodeArgumentExtractor {
