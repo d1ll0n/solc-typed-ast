@@ -122,8 +122,8 @@ export function getDanglingDocumentation<T extends ASTNode = ASTNode>(
     return undefined;
 }
 
-export function setDanglingDocumentation<T extends ASTNode = ASTNode>(
-    node: WithDanglingDocs & ASTNodeWithChildren<T>,
+export function setDanglingDocumentation(
+    node: WithDanglingDocs & ASTNodeWithChildren<ASTNode>,
     value: string | StructuredDocumentation | undefined
 ): void {
     const old = node.danglingDocumentation;
