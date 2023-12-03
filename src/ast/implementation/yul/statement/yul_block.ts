@@ -12,9 +12,10 @@ export class YulBlock extends YulStatementWithChildren<
         src: string,
         statements: Iterable<YulStatement>,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
 
         for (const statement of statements) {
             this.appendChild(statement);

@@ -11,7 +11,8 @@ export class ModernYulExpressionStatementProcessor extends ModernNodeProcessor<Y
         const [id, src] = super.process(reader, config, raw);
 
         const expression = reader.convert(raw.expression, config) as YulExpression;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, expression, undefined, raw];
+        return [id, src, expression, undefined, raw, nativeSrc];
     }
 }

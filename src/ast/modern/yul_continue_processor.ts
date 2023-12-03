@@ -10,6 +10,8 @@ export class ModernYulContinueProcessor extends ModernNodeProcessor<YulContinue>
     ): ConstructorParameters<typeof YulContinue> {
         const [id, src] = super.process(reader, config, raw);
 
-        return [id, src, undefined, raw];
+        const nativeSrc = raw.nativeSrc as string | undefined;
+
+        return [id, src, undefined, raw, nativeSrc];
     }
 }

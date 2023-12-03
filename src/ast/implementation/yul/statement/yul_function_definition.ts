@@ -51,9 +51,10 @@ export class YulFunctionDefinition extends YulStatement {
         returnParameters: YulTypedName[] = [],
         body: YulBlock,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
 
         this.scope = scope;
         this.name = name;

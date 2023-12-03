@@ -20,9 +20,10 @@ export class YulIdentifier extends YulExpression {
         src: string,
         name: string,
         referencedDeclaration?: number | ASTNode,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, raw);
+        super(id, src, raw, nativeSrc);
 
         this.name = name;
         this.referencedDeclaration = referencedDeclaration

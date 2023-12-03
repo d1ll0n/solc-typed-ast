@@ -9,7 +9,8 @@ export class ModernYulLeaveProcessor extends ModernNodeProcessor<YulLeave> {
         raw: any
     ): ConstructorParameters<typeof YulLeave> {
         const [id, src] = super.process(reader, config, raw);
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, undefined, raw];
+        return [id, src, undefined, raw, nativeSrc];
     }
 }

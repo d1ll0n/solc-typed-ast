@@ -12,7 +12,8 @@ export class ModernYulFunctionCallProcessor extends ModernNodeProcessor<YulFunct
 
         const functionName = reader.convert(raw.functionName, config) as YulIdentifier;
         const args = reader.convertArray(raw.arguments, config) as YulExpression[];
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, functionName, args, raw];
+        return [id, src, functionName, args, raw, nativeSrc];
     }
 }

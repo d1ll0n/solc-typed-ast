@@ -11,7 +11,8 @@ export class ModernYulBlockProcessor extends ModernNodeProcessor<YulBlock> {
         const [id, src] = super.process(reader, config, raw);
 
         const statements = reader.convertArray(raw.statements, config) as YulStatement[];
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, statements, undefined, raw];
+        return [id, src, statements, undefined, raw, nativeSrc];
     }
 }

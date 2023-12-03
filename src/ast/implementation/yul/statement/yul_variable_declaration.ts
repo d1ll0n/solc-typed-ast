@@ -18,9 +18,10 @@ export class YulVariableDeclaration extends YulStatement {
         variables: YulTypedName[],
         value?: YulExpression,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
         this.variables = variables;
         this.value = value;
         this.acceptChildren();

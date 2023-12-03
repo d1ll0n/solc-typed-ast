@@ -14,7 +14,8 @@ export class ModernYulCaseProcessor extends ModernNodeProcessor<YulCase> {
             raw.value === "default" ? raw.value : (reader.convert(raw.value, config) as YulLiteral);
 
         const body = reader.convert(raw.body, config) as YulBlock;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, value, body, undefined, raw];
+        return [id, src, value, body, undefined, raw, nativeSrc];
     }
 }

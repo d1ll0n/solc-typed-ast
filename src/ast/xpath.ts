@@ -30,7 +30,16 @@ interface SchemaInterface {
     nodeValue: (node: any) => any;
 }
 
-const SKIP = new Set(["context", "requiredContext", "raw", "children", "ownChildren"]);
+const SKIP = new Set([
+    "context",
+    "requiredContext",
+    "requiredNativeSrc",
+    "nativeSrc",
+    "nativeSourceInfo",
+    "raw",
+    "children",
+    "ownChildren"
+]);
 
 const ASTNodeSchema: SchemaInterface = {
     nodeName: (node: ASTNode) => node.type,

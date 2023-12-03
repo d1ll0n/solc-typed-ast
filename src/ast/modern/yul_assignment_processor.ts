@@ -12,7 +12,8 @@ export class ModernYulAssignmentProcessor extends ModernNodeProcessor<YulAssignm
 
         const variableNames = reader.convertArray(raw.variableNames, config) as YulIdentifier[];
         const value = reader.convert(raw.value, config) as YulExpression;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, variableNames, value, undefined];
+        return [id, src, variableNames, value, undefined, raw, nativeSrc];
     }
 }

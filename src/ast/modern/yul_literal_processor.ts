@@ -14,7 +14,8 @@ export class ModernYulLiteralProcessor extends ModernNodeProcessor<YulLiteral> {
         const value: string = raw.value as string;
         const hexValue: string = raw.hexValue;
         const typeString: string = raw.type;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, kind, value, hexValue, typeString, raw];
+        return [id, src, kind, value, hexValue, typeString, raw, nativeSrc];
     }
 }

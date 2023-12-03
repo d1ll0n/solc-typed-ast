@@ -23,9 +23,10 @@ export class YulIf extends YulStatement {
         condition: YulExpression,
         body: YulBlock,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
 
         this.vCondition = condition;
         this.vBody = body;

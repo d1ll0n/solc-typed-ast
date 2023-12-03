@@ -33,6 +33,13 @@ export class ASTNode {
     src: string;
 
     /**
+     * Source mapping data corresponting to the AST node
+     * in the IR source code - only present in irAst and
+     * irOptimizedAst.
+     */
+    nativeSrc?: string;
+
+    /**
      * Raw original Solc AST node that was used to create current node.
      */
     raw?: any;
@@ -42,10 +49,11 @@ export class ASTNode {
      */
     parent?: ASTNode;
 
-    constructor(id: number, src: string, raw?: any) {
+    constructor(id: number, src: string, raw?: any, nativeSrc?: string) {
         this.id = id;
         this.src = src;
         this.raw = raw;
+        this.nativeSrc = nativeSrc;
     }
 
     protected pickNodes(...args: Array<any | Iterable<any>>): ASTNode[] {
@@ -163,6 +171,21 @@ export class ASTNode {
      */
     get sourceInfo(): SourceLocation {
         return parseSourceLocation(this.src);
+    }
+
+    get requiredNativeSrc(): string {
+        if (this.nativeSrc) {
+            return this.nativeSrc;
+        }
+
+        throw new Error("nativeSrc is not set");
+    }
+
+    /**
+     * Returns parsed parts of the `src` property value
+     */
+    get nativeSourceInfo(): SourceLocation {
+        return parseSourceLocation(this.requiredNativeSrc);
     }
 
     walk(callback: ASTNodeCallback): void {

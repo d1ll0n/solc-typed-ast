@@ -11,7 +11,8 @@ export class ModernYulVariableDeclarationProcessor extends ModernNodeProcessor<Y
         const [id, src] = super.process(reader, config, raw);
         const variables = reader.convertArray(raw.variables, config) as YulTypedName[];
         const value = raw.value && (reader.convert(raw.value, config) as YulExpression);
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, variables, value, undefined, raw];
+        return [id, src, variables, value, undefined, raw, nativeSrc];
     }
 }

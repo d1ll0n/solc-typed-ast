@@ -17,9 +17,10 @@ export class YulAssignment extends YulStatement {
         variableNames: YulIdentifier[],
         value: YulExpression,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
         this.variableNames = variableNames;
         this.value = value;
         this.acceptChildren();

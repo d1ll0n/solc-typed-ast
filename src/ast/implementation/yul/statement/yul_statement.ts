@@ -21,9 +21,10 @@ export class YulStatement extends YulASTNode {
         id: number,
         src: string,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, raw);
+        super(id, src, raw, nativeSrc);
 
         this.documentation = documentation;
     }
@@ -44,9 +45,10 @@ export class YulStatementWithChildren<T extends YulASTNode | StructuredDocumenta
         id: number,
         src: string,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, raw);
+        super(id, src, raw, nativeSrc);
 
         this.documentation = documentation;
     }

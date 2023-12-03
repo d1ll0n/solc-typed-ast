@@ -13,8 +13,15 @@ export class YulTypedName extends YulExpression {
      */
     typeString: string;
 
-    constructor(id: number, src: string, name: string, typeString = "", raw?: any) {
-        super(id, src, raw);
+    constructor(
+        id: number,
+        src: string,
+        name: string,
+        typeString = "",
+        raw?: any,
+        nativeSrc?: string
+    ) {
+        super(id, src, raw, nativeSrc);
 
         this.name = name;
         this.typeString = typeString;

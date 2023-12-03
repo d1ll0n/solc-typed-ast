@@ -11,7 +11,8 @@ export class ModernYulTypedNameProcessor extends ModernNodeProcessor<YulTypedNam
         const [id, src] = super.process(reader, config, raw);
         const name: string = raw.name;
         const typeString: string = raw.type;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, name, typeString, raw];
+        return [id, src, name, typeString, raw, nativeSrc];
     }
 }

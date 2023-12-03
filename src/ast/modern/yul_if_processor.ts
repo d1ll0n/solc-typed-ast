@@ -12,7 +12,8 @@ export class ModernYulIfProcessor extends ModernNodeProcessor<YulIf> {
 
         const condition = reader.convert(raw.condition, config) as YulExpression;
         const body = reader.convert(raw.body, config) as YulBlock;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, condition, body, undefined, raw];
+        return [id, src, condition, body, undefined, raw, nativeSrc];
     }
 }

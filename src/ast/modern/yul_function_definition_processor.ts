@@ -14,7 +14,19 @@ export class ModernYulFunctionDefinitionProcessor extends ModernNodeProcessor<Yu
 
         const returnParameters = reader.convertArray(raw.returnVariables, config) as YulTypedName[];
         const body = reader.convert(raw.body, config) as YulBlock;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, -1, raw.name, parameters, returnParameters, body, undefined, raw];
+        return [
+            id,
+            src,
+            -1,
+            raw.name,
+            parameters,
+            returnParameters,
+            body,
+            undefined,
+            raw,
+            nativeSrc
+        ];
     }
 }

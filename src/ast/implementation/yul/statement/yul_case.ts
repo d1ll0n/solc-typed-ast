@@ -17,9 +17,10 @@ export class YulCase extends YulStatement {
         value: YulLiteral | "default",
         body: YulBlock,
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
         this.value = value;
         this.vBody = body;
 

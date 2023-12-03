@@ -12,7 +12,8 @@ export class ModernYulSwitchProcessor extends ModernNodeProcessor<YulSwitch> {
 
         const expression = reader.convert(raw.expression, config) as YulExpression;
         const cases = reader.convertArray(raw.cases, config) as YulCase[];
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, expression, cases, undefined, raw];
+        return [id, src, expression, cases, undefined, raw, nativeSrc];
     }
 }

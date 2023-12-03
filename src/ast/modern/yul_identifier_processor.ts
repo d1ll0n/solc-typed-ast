@@ -10,7 +10,8 @@ export class ModernYulIdentifierProcessor extends ModernNodeProcessor<YulIdentif
     ): ConstructorParameters<typeof YulIdentifier> {
         const [id, src] = super.process(reader, config, raw);
         const name: string = raw.name;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, name, -1, raw];
+        return [id, src, name, -1, raw, nativeSrc];
     }
 }

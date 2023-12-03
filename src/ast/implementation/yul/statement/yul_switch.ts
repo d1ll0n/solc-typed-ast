@@ -17,9 +17,10 @@ export class YulSwitch extends YulStatement {
         expression: YulExpression,
         cases: YulCase[],
         documentation?: string | StructuredDocumentation,
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, documentation, raw);
+        super(id, src, documentation, raw, nativeSrc);
         this.vExpression = expression;
         this.vCases = cases;
         this.acceptChildren();

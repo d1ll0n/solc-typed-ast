@@ -14,7 +14,8 @@ export class ModernYulForLoopProcessor extends ModernNodeProcessor<YulForLoop> {
         const condition = reader.convert(raw.condition, config) as YulExpression;
         const post = reader.convert(raw.post, config) as YulBlock;
         const body = reader.convert(raw.body, config) as YulBlock;
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, pre, condition, post, body, undefined, raw];
+        return [id, src, pre, condition, post, body, undefined, raw, nativeSrc];
     }
 }

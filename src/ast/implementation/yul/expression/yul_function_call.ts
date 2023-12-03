@@ -22,9 +22,10 @@ export class YulFunctionCall extends YulExpression {
         src: string,
         functionName: YulIdentifier,
         args: YulExpression[],
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, raw);
+        super(id, src, raw, nativeSrc);
         this.vFunctionName = functionName;
         this.vArguments = args;
 

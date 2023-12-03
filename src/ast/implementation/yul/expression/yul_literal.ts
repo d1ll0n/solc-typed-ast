@@ -31,9 +31,10 @@ export class YulLiteral extends YulExpression {
         value: string | number | bigint | boolean,
         hexValue: string,
         typeString = "",
-        raw?: any
+        raw?: any,
+        nativeSrc?: string
     ) {
-        super(id, src, raw);
+        super(id, src, raw, nativeSrc);
 
         this.kind = kind;
         this.value = value?.toString() ?? "";

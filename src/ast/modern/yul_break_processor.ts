@@ -9,7 +9,8 @@ export class ModernYulBreakProcessor extends ModernNodeProcessor<YulBreak> {
         raw: any
     ): ConstructorParameters<typeof YulBreak> {
         const [id, src] = super.process(reader, config, raw);
+        const nativeSrc = raw.nativeSrc as string | undefined;
 
-        return [id, src, undefined, raw];
+        return [id, src, undefined, raw, nativeSrc];
     }
 }
