@@ -37,9 +37,9 @@ export class YulASTNodeWithChildren<T extends YulASTNode>
     extends ASTNodeWithChildren<T>
     implements YulASTNode
 {
-    protected ownChildren: YulASTNode[] = [];
+    protected ownChildren: T[] = [];
 
-    get children(): readonly YulASTNode[] {
+    get children(): readonly T[] {
         return this.ownChildren;
     }
 
@@ -65,7 +65,7 @@ export class YulASTNodeWithChildren<T extends YulASTNode>
         return node;
     }
 
-    insertBefore(node: T, referenceNode: YulASTNode): T {
+    insertBefore(node: T, referenceNode: T): T {
         const index = this.ownChildren.indexOf(referenceNode);
 
         if (index === -1) {
@@ -79,23 +79,23 @@ export class YulASTNodeWithChildren<T extends YulASTNode>
         return node;
     }
 
-    insertAfter(node: T, referenceNode: YulASTNode): T {
+    insertAfter(node: T, referenceNode: T): T {
         if (this.ownChildren.indexOf(referenceNode) === -1) {
             throw new Error("Reference node is not a child of current node");
         }
 
-        const sibling = referenceNode.nextSibling;
+        const sibling = referenceNode.nextSibling as T | undefined;
 
         return sibling ? this.insertBefore(node, sibling) : this.appendChild(node);
     }
 
     insertAtBeginning(node: T): T {
-        const firstChild = this.firstChild;
+        const firstChild = this.firstChild as T | undefined;
 
         return firstChild ? this.insertBefore(node, firstChild) : this.appendChild(node);
     }
 
-    replaceChild<N extends T, O extends T>(newNode: N, oldNode: O): O {
+    replaceChild(newNode: T, oldNode: T): T {
         const index = this.ownChildren.indexOf(oldNode);
 
         if (index === -1) {
