@@ -310,7 +310,7 @@ export class ASTNode {
         return new Map(Object.entries(this));
     }
 
-    getGettersValues(): Map<string, any> {
+    getGettersKeys(): string[] {
         const getters: string[] = [];
 
         let proto = Object.getPrototypeOf(this);
@@ -330,6 +330,12 @@ export class ASTNode {
 
             proto = Object.getPrototypeOf(proto);
         }
+
+        return getters;
+    }
+
+    getGettersValues(): Map<string, any> {
+        const getters: string[] = this.getGettersKeys();
 
         const result = new Map<string, any>();
 

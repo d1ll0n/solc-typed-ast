@@ -56,12 +56,12 @@ const ASTNodeSchema: SchemaInterface = {
             attrs[k] = v;
         }
 
-        for (const [g, v] of node.getGettersValues().entries()) {
+        for (const g of node.getGettersKeys()) {
             if (SKIP.has(g)) {
                 continue;
             }
 
-            attrs[g] = v;
+            attrs[g] = node[g as keyof typeof node];
         }
 
         return attrs;
