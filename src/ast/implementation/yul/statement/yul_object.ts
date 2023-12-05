@@ -28,4 +28,10 @@ export class YulObject extends YulStatementWithChildren<
         this.vSubObjects = subObjects;
         this.acceptChildren();
     }
+
+    get children(): Array<YulObject | YulData | YulCode | StructuredDocumentation> {
+        return this.pickNodes(this.documentation, this.vCode, this.vSubObjects) as Array<
+            YulObject | YulData | YulCode | StructuredDocumentation
+        >;
+    }
 }
