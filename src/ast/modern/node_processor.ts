@@ -8,7 +8,7 @@ export class ModernNodeProcessor<T extends ASTNode> implements ASTNodeProcessor<
         raw: any
     ): ConstructorParameters<ASTNodeConstructor<T>> {
         const id = raw.id ?? reader.context.nextId;
-        const src = raw.src ?? "-1;-1;-1";
+        const src = raw.src ?? "-1:-1:-1";
         return [id, src, undefined, raw];
     }
 }
