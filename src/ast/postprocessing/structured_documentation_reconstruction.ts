@@ -1,6 +1,13 @@
 import { ASTNode } from "../ast_node";
 import { ASTNodePostprocessor, ASTReader, ASTReaderConfiguration } from "../ast_reader";
 import {
+    YulCode,
+    YulExpression,
+    YulObject,
+    YulStatement,
+    YulStatementWithChildren
+} from "../implementation";
+import {
     ContractDefinition,
     EnumDefinition,
     ErrorDefinition,
@@ -298,7 +305,12 @@ export class StructuredDocumentationReconstructingPostprocessor
                     node.parent instanceof SourceUnit ||
                     node.parent instanceof StructDefinition)) ||
             node instanceof Statement ||
-            node instanceof StatementWithChildren
+            node instanceof StatementWithChildren ||
+            node instanceof YulStatement ||
+            node instanceof YulStatementWithChildren ||
+            node instanceof YulCode ||
+            node instanceof YulObject ||
+            node instanceof YulExpression
         );
     }
 }
