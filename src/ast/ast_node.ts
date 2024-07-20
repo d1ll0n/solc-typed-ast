@@ -56,6 +56,10 @@ export class ASTNode {
         this.nativeSrc = nativeSrc;
     }
 
+    get astId(): number | undefined {
+        return this.raw?.astId;
+    }
+
     protected pickNodes(...args: Array<any | Iterable<any>>): ASTNode[] {
         const result: ASTNode[] = [];
 
