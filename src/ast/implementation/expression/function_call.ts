@@ -18,7 +18,7 @@ export type CallableDefinition =
     | VariableDeclaration;
 
 export class FunctionCall extends Expression {
-	readonly type = "FunctionCall";
+    readonly type = "FunctionCall";
     /**
      * Type of call: `functionCall`, `typeConversion` or `structConstructorCall`.
      */
@@ -129,6 +129,14 @@ export class FunctionCall extends Expression {
         }
 
         return ExternalReferenceType.Builtin;
+    }
+
+    get referencedDeclaration(): number {
+        const expression = this.vCallee;
+        if (expression instanceof MemberAccess || expression instanceof Identifier) {
+            return expression.referencedDeclaration;
+        }
+        return -1;
     }
 
     /**

@@ -9,7 +9,8 @@ import { Block } from "../statement/block";
 import { ContractDefinition } from "./contract_definition";
 
 export class FunctionDefinition extends ASTNode {
-	readonly type = "FunctionDefinition";
+    readonly type = "FunctionDefinition";
+
     /**
      * Is `false` if the function not have an implementation
      * and `true` if it is implemented in place.
