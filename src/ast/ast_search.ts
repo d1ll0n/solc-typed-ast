@@ -80,10 +80,17 @@ export class ASTSearch {
         return this.find("VariableDeclaration", { visibility });
     }
 
+    findIdentifiersReferencing(ref: number | undefined | ASTNode): Array<ASTNodeMap["Identifier"]> {
+        if (ref instanceof ASTNode) {
+            ref = ref.id;
+        }
+        return this.find("Identifier", { referencedDeclaration: ref });
+    }
+
     findFunctionCalls<C extends CallableDefinition>(fn: C): Array<ASTNodeMap["FunctionCall"]> {
-        return this.find("FunctionCall", { vIdentifier: fn.name }).filter(
-            (fnCall) => fnCall.vReferencedDeclaration?.id === fn.id
-        );
+        return this.find("FunctionCall", {
+            referencedDeclaration: fn.id
+        });
     }
 
     isFunctionInternallyReferenced(fn: CallableDefinition): boolean {
