@@ -163,7 +163,8 @@ export const block = new BuiltinStructType(
             "blockhash",
             [[new BuiltinFunctionType("blockhash", [types.uint256], [types.bytes32]), "<0.5.0"]]
         ],
-        ["timestamp", [[types.uint256, ">=0.4.13"]]]
+        ["timestamp", [[types.uint256, ">=0.4.13"]]],
+        ["blobbasefee", [[types.uint256, ">=0.8.24"]]]
     ])
 );
 
@@ -381,6 +382,10 @@ export const globalBuiltins = new BuiltinStructType(
                     "<0.8.0"
                 ]
             ]
+        ],
+        [
+            "blobhash",
+            [[new BuiltinFunctionType("blobhash", [types.uint256], [types.bytes32]), ">=0.8.24"]]
         ]
     ])
 );
@@ -761,6 +766,39 @@ export const yulBuiltins = new BuiltinStructType(
         ],
         ["msize", [[new YulBuiltinFunctionType("msize", [], [yulTypes.u256], false), ">=0.3.1"]]],
         ["gas", [[new YulBuiltinFunctionType("gas", [], [yulTypes.u256], false), ">=0.3.1"]]],
+
+        [
+            "tload",
+            [
+                [
+                    new YulBuiltinFunctionType("tload", [yulTypes.u256], [yulTypes.u256], false),
+                    ">=0.8.24"
+                ]
+            ]
+        ],
+        [
+            "tstore",
+            [
+                [
+                    new YulBuiltinFunctionType("tstore", [yulTypes.u256, yulTypes.u256], [], false),
+                    ">=0.8.24"
+                ]
+            ]
+        ],
+        [
+            "mcopy",
+            [
+                [
+                    new YulBuiltinFunctionType(
+                        "mcopy",
+                        [yulTypes.u256, yulTypes.u256, yulTypes.u256],
+                        [],
+                        true
+                    ),
+                    ">=0.8.24"
+                ]
+            ]
+        ],
         [
             "address",
             [[new YulBuiltinFunctionType("address", [], [yulTypes.u256], false), ">=0.3.1"]]
@@ -1109,6 +1147,19 @@ export const yulBuiltins = new BuiltinStructType(
         [
             "basefee",
             [[new YulBuiltinFunctionType("basefee", [], [yulTypes.u256], false), ">=0.8.7"]]
+        ],
+        [
+            "blobhash",
+            [
+                [
+                    new YulBuiltinFunctionType("blobhash", [yulTypes.u256], [yulTypes.u256], false),
+                    ">=0.8.24"
+                ]
+            ]
+        ],
+        [
+            "blobbasefee",
+            [[new YulBuiltinFunctionType("blobbasefee", [], [yulTypes.u256], false), ">=0.8.24"]]
         ],
         ["origin", [[new YulBuiltinFunctionType("origin", [], [yulTypes.u256], false), ">=0.3.1"]]],
         [
