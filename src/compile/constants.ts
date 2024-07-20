@@ -78,7 +78,8 @@ export const CompilerVersions08 = [
     "0.8.20",
     "0.8.21",
     "0.8.22",
-    "0.8.23"
+    "0.8.23",
+    "0.8.24"
 ];
 
 export const CompilerSeries = [
@@ -128,7 +129,15 @@ export enum CompilationOutput {
     EVM_BYTECODE_SOURCEMAP = "evm.bytecode.sourceMap",
     EVM_BYTECODE_LINKREFERENCES = "evm.bytecode.linkReferences",
     EVM_BYTECODE_GENERATEDSOURCES = "evm.bytecode.generatedSources",
+
+    EVM_DEPLOYEDBYTECODE = "evm.deployedBytecode",
     EVM_DEPLOYEDBYTECODE_IMMUTABLEREFERENCES = "evm.deployedBytecode.immutableReferences",
+    EVM_DEPLOYEDBYTECODE_OBJECT = "evm.deployedBytecode.object",
+    EVM_DEPLOYEDBYTECODE_OPCODES = "evm.deployedBytecode.opcodes",
+    EVM_DEPLOYEDBYTECODE_SOURCEMAP = "evm.deployedBytecode.sourceMap",
+    EVM_DEPLOYEDBYTECODE_LINKREFERENCES = "evm.deployedBytecode.linkReferences",
+    EVM_DEPLOYEDBYTECODE_GENERATEDSOURCES = "evm.deployedBytecode.generatedSources",
+
     EVM_METHODIDENTIFIERS = "evm.methodIdentifiers",
     EVM_GASESTIMATES = "evm.gasEstimates",
     EWASM_WAST = "ewasm.wast",
